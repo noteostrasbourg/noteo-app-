@@ -1,0 +1,9 @@
+{
+  "name": "noteo-app",
+  "version": "1.0.0",
+  "description": "Application d'enregistrement pour réfugiés",
+  "private": true,
+  "scripts": {
+    "build": "echo 'No build step needed'"
+  }
+}
