@@ -1,0 +1,2678 @@
+/// Le pdf fonctionne et se remplis bien mais avec signature en abs, TEL KO pour l’instant,  multi langage ok
+ ///
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <!-- intl-tel-input CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+<!-- intl-tel-input JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+<!-- Pour validation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"></script>
+  <meta charset="UTF-8">
+  <title>Accueil des Réfugiés - Version Complète Corrigée</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind CSS via jsDelivr CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <!-- Google Fonts / Roboto -->
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource/roboto@3.3.1/index.min.css" rel="stylesheet">
+  <!-- ChartJS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    html, body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: #f9fafb;
+      color: #14182b;
+      overflow-x: hidden !important;
+    }
+    .form-step { display: none; }
+    .form-step.active { display: block; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-button.active, .tab-button:focus {
+      background-color: #2563eb;
+      color: #fff;
+    }
+    canvas { max-width: 600px; margin: 0 auto; touch-action: none;}
+    ::-webkit-scrollbar { width: 0 !important }
+    .btn {
+      @apply inline-block font-bold py-2 px-4 rounded transition shadow focus:outline-none focus:ring-2;
+      cursor: pointer;
+      border: none;
+      margin: 0;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg,#2563eb 70%,#2563ebcc 100%);
+      color: #fff;
+    }
+    .btn-primary:hover,.btn-primary:focus { background-color: #1d4ed8; }
+    .btn-secondary {
+      background: linear-gradient(90deg,#6b7280 70%,#4b5563bb 100%);
+      color: white;
+    }
+    .btn-secondary:hover,.btn-secondary:focus { background-color: #4b5563; }
+    .btn-neutral {
+      background: #f3f4f6;
+      color: #3b3b3b;
+      border: 1px solid #d1d5db;
+    }
+    .btn-neutral:hover,.btn-neutral:focus { background: #e5e7eb;}
+    .pdf-ready code, .pdf-ready pre { white-space: pre-wrap; word-break: break-all;}
+    * { -webkit-tap-highlight-color:rgba(0,0,0,0); }
+    label, select, input, textarea, button { font-family: inherit; }
+    .max-h-admin-panel { max-height: 80vh; overflow-y: auto; }
+  </style>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://unpkg.com/pdfjs-dist@2.12.313/build/pdf.min.js"></script>
+</head>
+<body class="pdf-ready">
+
+<!-- Header -->
+<header class="bg-blue-900 text-white py-6 px-2 text-center mb-8">
+  <h1 class="text-3xl font-bold mb-2 flex items-center justify-center"><i class="fa-solid fa-house-user mr-2"></i> Bienvenue au SAS hotelier Notéo</h1>
+  <div class="text-md text-blue-200">Application permettant votre enregistrement complet</div>
+</header>
+  <main id="mainApp" class="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 mb-10 border border-blue-200">
+
+  <form id="refugeeForm" autocomplete="off">
+
+    
+   <!-- Step 1: Sélection de la langue -->
+<div class="form-step active" data-step="1">
+  <h2 class="text-xl font-semibold mb-4">Veuillez sélectionner votre langue / Choose your language</h2>
+  <select id="languageSelect" class="block border border-blue-300 rounded px-4 py-2 w-full mb-4">
+  <option value="fr">Français</option>
+  <option value="en">English</option>
+  <option value="sq">Shqip (Albanais)</option>
+  <option value="ar">العربية (Arabe)</option>
+  <option value="ru">Русский (Russe)</option>
+  <option value="ka">ქართული (Géorgien)</option>
+  <option value="ps">پښتو (Pachtou)</option>
+  <option value="it">Italiano (Italien)</option>
+  <option value="es">Español (Espagnol)</option>
+</select>
+  <div class="flex justify-end mt-4">
+    <button type="button" class="btn btn-primary" onclick="nextStep()" id="langNextBtn">Suivant</button>
+  </div>
+</div>
+ 
+    <!-- Step 2: Sélection famille -->
+    <div class="form-step" data-step="2">
+      <h2 class="text-xl font-semibold mb-4">Qui êtes-vous ?</h2>
+      <label class="block mb-2 font-medium">Sélectionnez votre famille / groupe :</label>
+      <select id="familySelect" class="border border-blue-300 rounded px-4 py-2 w-full mb-3"></select>
+      <div id="familyDetails" class="text-gray-700 mb-2"></div>
+<div class="mb-3">
+  <label class="block mb-2">Y a-t-il le bon nombre de personnes ?</label>
+  <div class="flex items-center space-x-4">
+    <div>
+      <input type="radio" id="presenceYes" name="presenceConfirm" value="yes" class="mr-2">
+      <label for="presenceYes">Oui</label>
+    </div>
+    <div>
+      <input type="radio" id="presenceNo" name="presenceConfirm" value="no" class="mr-2">
+      <label for="presenceNo">Non</label>
+    </div>
+  </div>
+  <div id="presenceWarning" class="hidden bg-red-100 border border-red-500 text-red-700 p-3 mt-2 rounded">
+    <strong>ATTENTION :</strong> AVANT DE CONTINUER IL FAUT APPELER DAVID OU JIMMY POUR LEUR DEMANDER QUOI FAIRE ET IL FAUDRA RECREER UNE FAMILLE AVEC LE BON NOMBRE DE PERSONNE
+  </div>
+</div>
+     <label class="block">
+  Numéro mobile&nbsp;:
+  <div class="mt-1">
+    <input type="tel" id="mobileInput" class="block border border-gray-300 rounded px-4 py-1 mb-1 w-full">
+  </div>
+  <div id="phoneError" class="text-red-500 text-sm hidden">Veuillez entrer un numéro de téléphone valide</div>
+</label>
+      <label class="block">Adresse mail&nbsp;:<input type="email" id="emailInput" class="block border border-gray-300 rounded px-4 py-1 mb-2 mt-1 w-full" placeholder="adresse@mail.com ou Néant"></label>
+      <div class="flex space-x-4 justify-end mt-4">
+        <button class="btn btn-secondary" type="button" onclick="prevStep()">Retour</button>
+        <button class="btn btn-primary" type="button" onclick="forceNextStep()">Continuer</button>
+      </div>
+    </div>
+   
+    <!-- Step 3: Explications prise en charge -->
+    <div class="form-step" data-step="3">
+      <h2 class="text-xl font-semibold mb-3">Explications et prise en charge</h2>
+      <ul class="mb-2 ml-4 list-disc text-gray-700">
+        <li>Vous êtes mis à l'abri dans ce bâtiment à titre gratuit par le SIAO.</li>
+        <li>Vous resterez ici pour une durée très limitée avant d'être orienté vers un hôtel.</li>
+        <li>Le but de votre passage ici est de désinfecter toutes vos affaires et d'être éventuellement vu par l'équipe mobile d'antenne pour évaluer votre situation.</li>
+      </ul>
+      <div class="flex space-x-4 justify-end mt-4">
+        <button class="btn btn-secondary" type="button" onclick="prevStep()">Retour</button>
+        <button class="btn btn-primary" type="button" onclick="nextStep()">Continuer</button>
+      </div>
+    </div>
+   
+    <!-- Step 4: Règlement à lire -->
+    <div class="form-step" data-step="4">
+      <h2 class="text-xl font-semibold mb-3">Résumé du règlement intérieur, voici les règles principales du règlement auquel il ne faut absolument pas dérogé pour le bien de tout les résidents. Le règlement complet vous sera envoyé via Whatsapp ou par mail</h2>
+     <div class="bg-gray-50 p-4 rounded border border-gray-200 mb-3 overflow-y-auto max-h-72" style="height:280px;">
+  <strong>Règles :</strong>
+  <ol class="list-decimal ml-4">
+    <li>L'accès au bâtiment est interdite à toute personnes en dehors de celle prévu par le bon de prise en charge, absolument interdit de ramener un ami ou un proche de la famille même un instant dans le bâtiment. Il est réservé uniquement aux résidents.</li>
+    <li>Il est interdit de dormir ailleurs qu'ici pendant votre séjour, même une nuit, si il y a une urgence et que vous devez dormir à l'extérieur du bâtiment il faudra une autorisation du SIAO. Dans le cas où notre équipe se rend compte que vous ne dormez pas sur place, le SIAO sera prévenu et vous risquez de perdre votre place.</li>
+    <li>Il est strictement interdit de ramener des affaires personnelles dans le bâtiment sans qu'elles soient passées en désinfection, il faudra donc prévenir la personne sur place dans le cas où d'autres affaires sont ramenées avec vous.</li>
+    <li>La feuille de présence doit être signée tous les jours avant 12h00, la feuille de présence ne doit jamais être signée à l'avance. Ce point est très important car les feuilles de présence sont transmises au SIAO quotidiennement.</li>
+    <li>Il est interdit de ramener des appareils électroniques dans le bâtiment, tout ce dont vous avez besoin est déjà fourni.</li>
+    <li>Le bâtiment est non fumeur.</li>
+  </ol>
+</div>
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="checkbox" id="readRules" class="mr-2 align-middle"> 
+        <span>J'ai lu et compris le règlement intérieur</span>
+      </label>
+      <div id="rulesError" class="text-red-500 mt-2 hidden">Merci de cocher la case : vous devez lire et accepter le règlement pour continuer.</div>
+      <div class="flex space-x-4 justify-end mt-4">
+        <button class="btn btn-secondary" type="button" onclick="prevStep()">Retour</button>
+        <button class="btn btn-primary" type="button" onclick="validateRulesStep()">Continuer</button>
+      </div>
+    </div>
+ 
+    <!-- Step 5: Quiz compréhension règlement -->
+    <div class="form-step" data-step="5">
+      <h2 class="text-xl font-semibold mb-3">Quiz sur le règlement</h2>
+      <div id="quizBlock">
+        <div class="mb-3">
+          <label class="font-medium">Avez-vous le droit de ramener des amis pour visiter ou boire un café ?</label>
+          <select class="border border-gray-300 rounded px-4 py-2 w-full" id="q1">
+            <option value="">Sélectionner...</option>
+            <option value="oui">Oui</option>
+            <option value="non">Non</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="font-medium">Avez-vous le droit de rapporter des valises non désinfectées ?</label>
+          <select class="border border-gray-300 rounded px-4 py-2 w-full" id="q2">
+            <option value="">Sélectionner...</option>
+            <option value="oui">Oui</option>
+            <option value="non">Non</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="font-medium">Avez-vous le droit de rentrer après 1h du matin ?</label>
+          <select class="border border-gray-300 rounded px-4 py-2 w-full" id="q3">
+            <option value="">Sélectionner...</option>
+            <option value="oui">Oui</option>
+            <option value="non">Non</option>
+          </select>
+        </div>
+      </div>
+      <div id="quizError" class="text-red-500 mb-2 hidden">Les réponses sont incorrectes. Veuillez relire le règlement.</div>
+      <div class="flex space-x-4 justify-end mt-4">
+        <button class="btn btn-secondary" type="button" onclick="prevStep()">Retour</button>
+        <button class="btn btn-primary" type="button" onclick="validateQuizStep()">Continuer</button>
+      </div>
+    </div>
+     <!-- Step 6: Signature du règlement -->
+    <div class="form-step" data-step="6">
+      <h2 class="text-xl font-semibold mb-3">Signature électronique du règlement</h2>
+      <p class="mb-2">Signez ci-dessous pour attester votre accord au règlement :</p>
+      <div class="flex justify-center items-center w-full">
+        <canvas id="signaturePad" width="360" height="120" class="border border-gray-400 bg-gray-50 rounded mb-2 w-full touch-none"></canvas>
+      </div>
+      <button type="button" class="btn btn-neutral mb-2" onclick="clearSignature()"><i class="fa fa-eraser"></i> Effacer la signature</button>
+      <div id="signatureError" class="text-red-500 mb-2 hidden">Veuillez signer pour continuer.</div>
+      <div class="flex space-x-4 justify-end mt-4">
+        <button class="btn btn-secondary" type="button" onclick="prevStep()">Retour</button>
+        <button class="btn btn-primary" type="button" onclick="validateSignatureStep()">Continuer</button>
+      </div>
+    </div>
+<!-- Step 7: Gestion des bagages -->
+<div class="form-step" data-step="7">
+  <div class="bg-white rounded-lg border border-gray-300 shadow-sm p-5 mb-4">
+    <h2 class="text-xl font-semibold mb-4">
+      Vos valises vont devoir être mises dans un congélateur pendant 48h minimum. Ce procédé permet l'élimination des punaises de lit ou des cafards. Même si vous pensez ne pas avoir de nuisibles, cette procédure est obligatoire.
+      <br><br>
+      Vous avez le droit de trier vos affaires tout de suite et de faire un sac d'affaires que nous allons passer au sèche-linge puis vous rendre dans 30 minutes.
+      <br><br>
+     <p class="text-red-600"> Maintenant, faites ce sac d'affaires que vous pourrez récupérer tout de suite, le reste va au congélateur et vous le récupérerez dans 48h.</p> 
+      <br><br>
+      Vous avez le droit à maximum 1,5 valises/sac d'affaires avec vous par personne. L'excédent doit être remis à un tiers ou jeté.
+    </h2>
+  </div>
+  
+  <div class="bg-white rounded-lg border border-blue-300 p-4 shadow-sm mb-5">
+    <label class="font-medium text-gray-800 block mb-2">Combien de valises/sacs d'affaires avez-vous ?</label>
+    <input type="number" min="1" max="20" id="baggageCount" class="block border border-blue-400 rounded px-4 py-2 w-24 mb-2" required />
+  </div>
+  
+  <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-300 mb-5">
+    <p class="mb-3 font-medium">
+      <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+      Chaque personne a droit à 1,5 valises. Toute affaire supplémentaire doit être jetée ou stockée ailleurs.
+    </p>
+    <p>
+      Les valises vont être stockées dans un congélateur pendant 48h pour désinfection (punaises de lit, cafards, etc). Vous pouvez prendre un petit sac d'affaires d'urgence pour la famille, il passera 30 min au sèche-linge.
+    </p>
+  </div>
+  
+  <div class="flex space-x-4 justify-end mt-4">
+    <button class="btn btn-secondary" type="button" onclick="prevStep()">Retour</button>
+    <button class="btn btn-primary" type="button" onclick="nextStep()">Continuer</button>
+  </div>
+</div>
+
+<!-- Step 8: Validation interdiction d'apporter d'autres affaires -->
+<div class="form-step" data-step="8">
+  <h2 class="text-xl font-semibold mb-3">Rappel important</h2>
+  
+  <div class="bg-yellow-100 border-l-4 border-yellow-500 p-5 rounded-r-lg shadow-sm mb-4">
+    <p class="mb-3">
+      <strong>Il est strictement interdit de ramener d'autres affaires sans prévenir le responsable sur place.
+      Nous voulons nous assurer que vous avez bien compris ce point, si vous devez ramener d'autres affaires que vous avez avec vous en ce moment, il faudra prévenir le responsable afin qu'elles soient mises au congélateur 48h.</strong>
+    </p>
+    <p>
+      En cas d'infraction, nous demanderons une fin de prise en charge au SIAO et vous risquerez de ne plus pouvoir être logé.
+    </p>
+  </div>
+  
+  <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-5">
+    <label class="flex items-center cursor-pointer">
+      <input type="checkbox" id="affairesConfirmation" class="form-checkbox h-5 w-5 text-blue-600 mr-3">
+      <span class="font-medium">J'ai compris</span>
+    </label>
+    <div id="affaireError" class="text-red-500 mt-2 hidden">Merci de confirmer avoir compris cette règle.</div>
+  </div>
+  
+  <div class="flex space-x-4 justify-end mt-4">
+    <button class="btn btn-secondary" type="button" onclick="prevStep()">Retour</button>
+    <button class="btn btn-primary" type="button" onclick="validateAffairesStep()">Continuer</button>
+  </div>
+</div>
+
+    
+    <!-- Step 9: Contrat de prise en charge précomplété et signature -->
+    <div class="form-step" data-step="9">
+      <h2 class="text-xl font-semibold mb-3">Contrat de prise en charge</h2>
+      
+      <!-- Prévisualisation du PDF -->
+      <div class="bg-gray-100 border border-gray-300 p-4 rounded mb-3" style="min-height: 400px;">
+        <div id="pdfViewer" class="w-full h-full">
+          <div id="pdfLoading" class="flex justify-center items-center text-blue-800 p-8">
+            <i class="fa fa-spinner fa-spin mr-2"></i> Chargement du contrat...
+          </div>
+        </div>
+      </div>
+      
+      <p class="mb-2 mt-4">Veuillez signer pour valider le contrat :</p>
+      <div class="flex justify-center items-center w-full">
+        <canvas id="signaturePad2" width="360" height="120" class="border border-gray-400 bg-gray-50 rounded mb-2 w-full touch-none"></canvas>
+      </div>
+      <button type="button" class="btn btn-neutral mb-2" onclick="clearSignature2()"><i class="fa fa-eraser"></i> Effacer la signature</button>
+      <div id="signature2Error" class="text-red-500 mb-2 hidden">Veuillez signer pour valider le contrat.</div>
+      <div class="flex space-x-4 justify-end mt-4">
+        <button class="btn btn-secondary" type="button" onclick="prevStep()">Retour</button>
+        <button id="continueBtn" class="btn btn-primary" type="button" onclick="validateContractStep()">Continuer</button>
+      </div>
+    </div>
+   
+    <!-- Step 10: Fin et code wifi -->
+    <div class="form-step" data-step="10">
+      <h2 class="text-xl font-semibold mb-3">Merci, l'enregistrement est terminé !</h2>
+      <p class="mb-2">Votre dossier et documents signés ont bien été enregistrés.</p>
+      <div class="bg-green-100 border border-green-500 text-green-950 rounded px-4 py-3 mb-2">
+        <strong>Code WiFi&nbsp;: <span class="font-mono" id="wifiCode">noteostrasbourg</span></strong>
+      </div>
+      <p>Prenez soin de ce code et n'hésitez pas à contacter le personnel pour toute question complémentaire.</p>
+      <div class="mt-4 flex justify-end">
+        <button type="button" class="btn btn-primary" onclick="location.reload()">Nouvel enregistrement</button>
+      </div>
+    </div>
+  </form>
+</main>
+  <!-- Bouton Administration -->
+<div class="fixed bottom-2 right-2 z-50">
+  <button class="bg-blue-800 text-white font-bold py-2 px-4 rounded shadow" onclick="openAdminPanel()">
+    <i class="fa-solid fa-gear"></i> Admin
+  </button>
+</div>
+
+<!-- Panneau d'administration / Back Office -->
+<div id="adminOverlay" class="fixed inset-0 bg-black bg-opacity-30 z-50 hidden flex flex-col">
+  <div class="bg-white max-w-4xl mx-auto mt-10 rounded shadow-xl w-full p-8 pdf-ready relative max-h-admin-panel">
+    <div class="flex justify-between items-center border-b pb-2 mb-4">
+      <h2 class="text-2xl font-semibold"><i class="fa-solid fa-sliders"></i> Espace Administrateur</h2>
+      <div class="flex items-center ml-auto mr-4">
+        <div id="connectionStatus" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+        <span class="text-sm">Statut Firebase</span>
+      </div>
+      <button class="text-gray-500 text-2xl font-bold" onclick="closeAdminPanel()">&times;</button>
+    </div>
+    <nav class="flex mb-6 border-b">
+      <button class="tab-button px-6 py-2 text-blue-800 font-semibold rounded-t active" onclick="showTab(0)">Tableau de bord</button>
+      <button class="tab-button px-6 py-2 text-blue-800 font-semibold rounded-t" onclick="showTab(1)">Familles</button>
+      <button class="tab-button px-6 py-2 text-blue-800 font-semibold rounded-t" onclick="showTab(2)">Documents</button>
+      <button class="tab-button px-6 py-2 text-blue-800 font-semibold rounded-t" onclick="showTab(3)">Paramètres</button>
+      <button class="tab-button px-6 py-2 text-blue-800 font-semibold rounded-t" onclick="showTab(4)">Contrats PDF</button>
+    </nav>
+    <div>
+      <!-- Tab: Tableau de bord -->
+      <div class="tab-content active">
+        <h3 class="text-lg font-bold mb-2">Statistiques</h3>
+        <canvas id="statChart" height="120"></canvas>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <div class="text-xl font-semibold text-blue-800" id="statTotalFamilles">-</div>
+            <div class="text-gray-500">Familles importées</div>
+          </div>
+          <div>
+            <div class="text-xl font-semibold text-blue-800" id="statTotalEnreg">-</div>
+            <div class="text-gray-500">Enregistrements réalisés</div>
+          </div>
+        </div>
+      </div>
+      <!-- Tab: Familles -->
+      <div class="tab-content">
+        <h3 class="text-lg font-bold mb-2">Gestion des familles attendues</h3>
+        <table class="w-full mt-2 border text-sm">
+          <thead>
+            <tr class="bg-gray-200">
+              <th class="p-2 border">Nom chef</th>
+              <th class="p-2 border">Date naissance</th>
+              <th class="p-2 border">Ménage</th>
+            </tr>
+          </thead>
+          <tbody id="familiesAdminTable"></tbody>
+        </table>
+      </div>
+      <!-- Tab: Documents -->
+      <div class="tab-content">
+        <h3 class="text-lg font-bold mb-3">Gestion des documents</h3>
+        
+      <!-- Tab: Paramètres -->
+      <div class="tab-content">
+        <h3 class="text-lg font-bold mb-2">Paramètres généraux</h3>
+        <div class="mb-4">
+          <label for="wifiCodeAdmin" class="font-semibold">Code WiFi&nbsp;:</label>
+          <input type="text" id="wifiCodeAdmin" class="ml-2 border p-2 rounded" style="width:200px">
+          <button class="btn-primary ml-2" onclick="saveWifiCode()">Enregistrer</button>
+        </div>
+        <div>
+          <button class="btn-secondary mt-2" onclick="logoutAdmin()">Se déconnecter</button>
+        </div>
+      </div>
+      <!-- Tab: Contrats PDF -->
+      <div class="tab-content">
+        <h3 class="text-lg font-bold mb-3">Téléversement de contrat PDF</h3>
+        <form id="uploadPdfForm" enctype="multipart/form-data" onsubmit="handlePdfUpload(event)">
+          <input type="file" id="pdfInput" accept="application/pdf" class="mb-2">
+          <button class="btn-primary ml-2" type="submit">Téléverser</button>
+          <span id="pdfUploadStatus" class="ml-2 text-sm text-gray-600"></span>
+        </form>
+        <div class="my-4">
+          <h4 class="font-medium mb-2">Contrat PDF actuel :</h4>
+          <div id="currentPdfInfo" class="text-blue-700 text-sm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="absolute inset-0" onclick="closeAdminPanel()" style="z-index:-1"></div>
+</div>
+  <!-- Firebase App compat mode -->
+<script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.19.1/firebase-database-compat.js"></script>
+
+<script>
+// Configuration Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAWR_aONi6ZwlVn0KiA93qem6Boy0Pom5s",
+  authDomain: "noteo-6790d.firebaseapp.com",
+  projectId: "noteo-6790d",
+  storageBucket: "noteo-6790d.firebasestorage.app",
+  messagingSenderId: "45369032166",
+  appId: "1:45369032166:web:d3f9555681484126f5aa27",
+  measurementId: "G-1436E6P63N",
+  databaseURL: "https://noteo-6790d-default-rtdb.firebaseio.com"
+};
+
+// Initialisation avec vérification
+if (!firebase.apps || !firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+} else {
+  firebase.app(); // Si déjà initialisé, utilisez l'instance existante
+}
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// Variables globales
+let gFamilies = [];
+// Variables globales - Modifiez la déclaration de gContractTemplate
+let gContractTemplate = {
+  fr: `Je soussigné(e) {nom_chef_famille}, né(e) le {date_naissance}, représentant un ménage de {nombre_personnes} personne(s), certifie avoir pris connaissance du règlement, et m'engage à le respecter pendant toute la durée de mon séjour. Fait le {date_jour}`,
+  en: `I, the undersigned {nom_chef_famille}, born on {date_naissance}, representing a household of {nombre_personnes} person(s), certify that I have read the regulations and agree to comply with them throughout my stay. Done on {date_jour}`,
+  sq: `Unë, i nënshkruari {nom_chef_famille}, lindur më {date_naissance}, përfaqësues i një familje prej {nombre_personnes} personi/personash, vërtetoj se i kam lexuar rregulloret dhe jam dakord t'i respektoj ato gjatë gjithë qëndrimit tim. Bërë më {date_jour}`,
+  ar: `أنا، الموقع أدناه {nom_chef_famille}، المولود في {date_naissance}، ممثل أسرة مكونة من {nombre_personnes} شخص/أشخاص، أشهد بأنني قرأت اللوائح وأوافق على الالتزام بها طوال فترة إقامتي. تم في {date_jour}`,
+  ru: `Я, нижеподписавшийся {nom_chef_famille}, родившийся {date_naissance}, представляющий домохозяйство из {nombre_personnes} человек(а), подтверждаю, что ознакомился с правилами и соглашаюсь соблюдать их в течение всего пребывания. Составлено {date_jour}`,
+  ka: `მე, ქვემოთ ხელმომწერი {nom_chef_famille}, დაბადებული {date_naissance}, წარმომადგენელი {nombre_personnes} პირისგან შემდგარი ოჯახისა, ვადასტურებ, რომ წავიკითხე წესები და ვეთანხმები მათ შესრულებას ჩემი დარჩენის განმავლობაში. შედგენილია {date_jour}`,
+  ps: `زه، لاندې لاسلیک کوونکی {nom_chef_famille}، په {date_naissance} کې زیږیدلی، د {nombre_personnes} کسانو د کورنۍ استازیتوب کوم، تصدیق کوم چې ما مقررات لوستي دي او موافق یم چې د خپل پاتې کیدو په اوږدو کې به یې مراعات کوم. نیټه {date_jour}`,
+  it: `Io sottoscritto {nom_chef_famille}, nato il {date_naissance}, rappresentante di un nucleo familiare di {nombre_personnes} persona/e, certifico di aver letto il regolamento e accetto di rispettarlo durante tutto il mio soggiorno. Fatto il {date_jour}`,
+  es: `Yo, el abajo firmante {nom_chef_famille}, nacido el {date_naissance}, representante de un hogar de {nombre_personnes} persona(s), certifico que he leído las normas y me comprometo a cumplirlas durante toda mi estancia. Hecho el {date_jour}`
+};
+let gWifiCode = "noteostrasbourg";
+let gSignedEntries = [];
+let gPdfBytes = null;
+let gPdfDoc = null;
+ 
+
+// Système de traduction
+let currentLang = 'fr'; // Langue par défaut
+
+
+// Fonction pour configurer le sélecteur de langue
+function setupLanguageSelector() {
+  const langSelect = document.getElementById('languageSelect');
+  if (langSelect) {
+    langSelect.addEventListener('change', function() {
+      currentLang = this.value;
+      translateUI();
+    });
+  }
+}
+// Fonction pour traduire les éléments de l'interface
+function translateUI() {
+  try {
+    // Traduction du header
+    const headerTitle = document.querySelector('header h1');
+    if (headerTitle) {
+      const titleText = {
+        fr: "Bienvenue au SAS hotelier Notéo",
+        en: "Welcome to Notéo Hotel SAS",
+        sq: "Mirësevini në SAS Hotel Notéo", // Albanais
+        ar: "مرحبًا بكم في فندق نوتيو", // Arabe
+        ru: "Добро пожаловать в отель Notéo", // Russe
+        ka: "კეთილი იყოს თქვენი მობრძანება Notéo სასტუმროში", // Géorgien
+        ps: "د نوتیو هوټل ته ښه راغلاست", // Pachtou
+        it: "Benvenuti all'hotel Notéo", // Italien
+        es: "Bienvenido al hotel Notéo" // Espagnol
+      };
+      headerTitle.innerHTML = `<i class="fa-solid fa-house-user mr-2"></i> ${titleText[currentLang] || titleText.fr}`;
+    }
+
+    const headerSubtitle = document.querySelector('header .text-blue-200');
+    if (headerSubtitle) {
+      const subtitleText = {
+        fr: "Application permettant votre enregistrement complet",
+        en: "Application for your complete registration",
+        sq: "Aplikacioni për regjistrimin tuaj të plotë",
+        ar: "تطبيق للتسجيل الكامل الخاص بك",
+        ru: "Приложение для полной регистрации",
+        ka: "აპლიკაცია თქვენი სრული რეგისტრაციისთვის",
+        ps: "ستاسو د بشپړ راجسټرېشن لپاره غوښتنلیک",
+        it: "Applicazione per la tua registrazione completa",
+        es: "Aplicación para su registro completo"
+      };
+      headerSubtitle.textContent = subtitleText[currentLang] || subtitleText.fr;
+    }
+    // Gérer la direction du texte pour les langues RTL
+if (currentLang === 'ar' || currentLang === 'ps') { // Arabe et Pachtou sont RTL
+  document.body.setAttribute('dir', 'rtl');
+  document.querySelectorAll('.flex.space-x-4').forEach(el => {
+    el.classList.remove('space-x-4');
+    el.classList.add('space-x-reverse', 'flex-row-reverse');
+  });
+} else {
+  document.body.setAttribute('dir', 'ltr');
+  document.querySelectorAll('.flex.space-x-reverse').forEach(el => {
+    el.classList.remove('space-x-reverse', 'flex-row-reverse');
+    el.classList.add('space-x-4');
+  });
+}
+
+    // Étape 1 - Sélection de la langue
+    const step1Title = document.querySelector('.form-step[data-step="1"] h2');
+    if (step1Title) {
+      const langSelectionText = {
+        fr: "Veuillez sélectionner votre langue / Choose your language",
+        en: "Please select your language / Veuillez sélectionner votre langue",
+        sq: "Ju lutemi zgjidhni gjuhën tuaj / Veuillez sélectionner votre langue",
+        ar: "الرجاء اختيار لغتك / Veuillez sélectionner votre langue",
+        ru: "Пожалуйста, выберите ваш язык / Veuillez sélectionner votre langue",
+        ka: "გთხოვთ აირჩიოთ თქვენი ენა / Veuillez sélectionner votre langue",
+        ps: "مهرباني وکړئ خپله ژبه وټاکئ / Veuillez sélectionner votre langue",
+        it: "Si prega di selezionare la lingua / Veuillez sélectionner votre langue",
+        es: "Por favor seleccione su idioma / Veuillez sélectionner votre langue"
+      };
+      step1Title.textContent = langSelectionText[currentLang] || langSelectionText.fr;
+    }
+    
+    const langNextBtn = document.getElementById('langNextBtn');
+    if (langNextBtn) {
+      const nextText = {
+        fr: "Suivant",
+        en: "Next",
+        sq: "Tjetër",
+        ar: "التالي",
+        ru: "Далее",
+        ka: "შემდეგი",
+        ps: "بل",
+        it: "Avanti",
+        es: "Siguiente"
+      };
+      langNextBtn.textContent = nextText[currentLang] || nextText.fr;
+    }
+    
+    // Étape 2 - Sélection famille
+    const step2Title = document.querySelector('.form-step[data-step="2"] h2');
+    if (step2Title) {
+      const whoAreYouText = {
+        fr: "Qui êtes-vous ?",
+        en: "Who are you?",
+        sq: "Kush jeni ju?",
+        ar: "من أنت؟",
+        ru: "Кто вы?",
+        ka: "ვინ ხართ თქვენ?",
+        ps: "ته څوک یې؟",
+        it: "Chi sei?",
+        es: "¿Quién eres?"
+      };
+      step2Title.textContent = whoAreYouText[currentLang] || whoAreYouText.fr;
+    }
+    
+    const familyLabel = document.querySelector('.form-step[data-step="2"] label.block.font-medium');
+    if (familyLabel) {
+      const selectFamilyText = {
+        fr: "Sélectionnez votre famille / groupe :",
+        en: "Select your family/group:",
+        sq: "Zgjidhni familjen/grupin tuaj:",
+        ar: "اختر عائلتك/مجموعتك:",
+        ru: "Выберите вашу семью/группу:",
+        ka: "აირჩიეთ თქვენი ოჯახი/ჯგუფი:",
+        ps: "خپله کورنۍ/ډله وټاکئ:",
+        it: "Seleziona la tua famiglia/gruppo:",
+        es: "Seleccione su familia/grupo:"
+      };
+      familyLabel.textContent = selectFamilyText[currentLang] || selectFamilyText.fr;
+    }
+    
+    const rightNumberLabel = document.querySelector('.form-step[data-step="2"] label.block.mb-2:not(.font-medium)');
+    if (rightNumberLabel) {
+      const rightNumberText = {
+        fr: "Y a-t-il le bon nombre de personnes ?",
+        en: "Is the number of people correct?",
+        sq: "A është numri i saktë i njerëzve?",
+        ar: "هل عدد الأشخاص صحيح؟",
+        ru: "Правильное ли количество людей?",
+        ka: "არის თუ არა ადამიანების რაოდენობა სწორი?",
+        ps: "ایا د خلکو شمیر سم دی؟",
+        it: "Il numero di persone è corretto?",
+        es: "¿Es correcto el número de personas?"
+      };
+      rightNumberLabel.textContent = rightNumberText[currentLang] || rightNumberText.fr;
+    }
+    
+    const yesLabel = document.querySelector('label[for="presenceYes"]');
+    if (yesLabel) {
+      const yesText = {
+        fr: "Oui",
+        en: "Yes",
+        sq: "Po",
+        ar: "نعم",
+        ru: "Да",
+        ka: "დიახ",
+        ps: "هو",
+        it: "Sì",
+        es: "Sí"
+      };
+      yesLabel.textContent = yesText[currentLang] || yesText.fr;
+    }
+    
+    const noLabel = document.querySelector('label[for="presenceNo"]');
+    if (noLabel) {
+      const noText = {
+        fr: "Non",
+        en: "No",
+        sq: "Jo",
+        ar: "لا",
+        ru: "Нет",
+        ka: "არა",
+        ps: "نه",
+        it: "No",
+        es: "No"
+      };
+      noLabel.textContent = noText[currentLang] || noText.fr;
+    }
+    
+    const presenceWarning = document.getElementById('presenceWarning');
+    if (presenceWarning) {
+      const warningText = {
+        fr: "AVANT DE CONTINUER IL FAUT APPELER DAVID OU JIMMY POUR LEUR DEMANDER QUOI FAIRE ET IL FAUDRA RECREER UNE FAMILLE AVEC LE BON NOMBRE DE PERSONNE",
+        en: "BEFORE CONTINUING, YOU MUST CALL DAVID OR JIMMY TO ASK WHAT TO DO. A NEW FAMILY WITH THE CORRECT NUMBER OF PEOPLE WILL NEED TO BE CREATED",
+        sq: "PARA SE TË VAZHDONI, DUHET TË TELEFONONI DAVID OSE JIMMY PËR TË PYETUR SE ÇFARË TË BËNI. DUHET TË KRIJOHET NJË FAMILJE E RE ME NUMRIN E SAKTË TË PERSONAVE",
+        ar: "قبل المتابعة، يجب عليك الاتصال بديفيد أو جيمي لسؤالهم عما يجب فعله. سيلزم إنشاء عائلة جديدة بالعدد الصحيح من الأشخاص",
+        ru: "ПРЕЖДЕ ЧЕМ ПРОДОЛЖИТЬ, ВЫ ДОЛЖНЫ ПОЗВОНИТЬ ДЭВИДУ ИЛИ ДЖИММИ, ЧТОБЫ УЗНАТЬ, ЧТО ДЕЛАТЬ. НУЖНО БУДЕТ СОЗДАТЬ НОВУЮ СЕМЬЮ С ПРАВИЛЬНЫМ КОЛИЧЕСТВОМ ЛЮДЕЙ",
+        ka: "გაგრძელებამდე, უნდა დაურეკოთ დეივიდს ან ჯიმის, რათა გაარკვიოთ, რა გააკეთოთ. საჭირო იქნება ახალი ოჯახის შექმნა ადამიანების სწორი რაოდენობით",
+        ps: "د دوام مخکې، تاسو باید ډیویډ یا جیمي ته زنګ ووهئ چې وپوښتئ چې څه وکړئ. د خلکو د سم شمیر سره به نوې کورنۍ جوړول اړین وي",
+        it: "PRIMA DI CONTINUARE, DEVI CHIAMARE DAVID O JIMMY PER CHIEDERE COSA FARE. SARÀ NECESSARIO CREARE UNA NUOVA FAMIGLIA CON IL NUMERO CORRETTO DI PERSONE",
+        es: "ANTES DE CONTINUAR, DEBE LLAMAR A DAVID O JIMMY PARA PREGUNTAR QUÉ HACER. SERÁ NECESARIO CREAR UNA NUEVA FAMILIA CON EL NÚMERO CORRECTO DE PERSONAS"
+      };
+      const attentionLabel = {
+        fr: "ATTENTION :",
+        en: "CAUTION:",
+        sq: "KUJDES:",
+        ar: "تنبيه:",
+        ru: "ВНИМАНИЕ:",
+        ka: "ყურადღება:",
+        ps: "پام:",
+        it: "ATTENZIONE:",
+        es: "ATENCIÓN:"
+      };
+      presenceWarning.innerHTML = `<strong>${attentionLabel[currentLang] || attentionLabel.fr}</strong> ${warningText[currentLang] || warningText.fr}`;
+    }
+    
+    // Mobile and email fields
+    const mobileLabel = document.querySelector('label.block:has(#mobileInput)');
+    if (mobileLabel && mobileLabel.childNodes[0]) {
+      const mobileText = {
+        fr: "Numéro mobile :",
+        en: "Mobile number:",
+        sq: "Numri i telefonit mobil:",
+        ar: "رقم الهاتف المحمول:",
+        ru: "Мобильный номер:",
+        ka: "მობილური ნომერი:",
+        ps: "د موبایل شمیره:",
+        it: "Numero di cellulare:",
+        es: "Número móvil:"
+      };
+      mobileLabel.childNodes[0].nodeValue = mobileText[currentLang] || mobileText.fr;
+    }
+    
+    const phoneError = document.getElementById('phoneError');
+    if (phoneError) {
+      const phoneErrorText = {
+        fr: "Veuillez entrer un numéro de téléphone valide",
+        en: "Please enter a valid phone number",
+        sq: "Ju lutemi shkruani një numër telefoni të vlefshëm",
+        ar: "الرجاء إدخال رقم هاتف صالح",
+        ru: "Пожалуйста, введите действительный номер телефона",
+        ka: "გთხოვთ შეიყვანოთ ტელეფონის ნომერი სწორად",
+        ps: "مهرباني وکړئ د تلیفون یو معتبر شمیره دننه کړئ",
+        it: "Inserisci un numero di telefono valido",
+        es: "Por favor, introduzca un número de teléfono válido"
+      };
+      phoneError.textContent = phoneErrorText[currentLang] || phoneErrorText.fr;
+    }
+    
+    const emailLabel = document.querySelector('label.block:has(#emailInput)');
+    if (emailLabel && emailLabel.childNodes[0]) {
+      const emailText = {
+        fr: "Adresse mail :",
+        en: "Email address:",
+        sq: "Adresa e emailit:",
+        ar: "عنوان البريد الإلكتروني:",
+        ru: "Адрес электронной почты:",
+        ka: "ელ-ფოსტის მისამართი:",
+        ps: "د بریښنالیک پته:",
+        it: "Indirizzo email:",
+        es: "Dirección de correo electrónico:"
+      };
+      emailLabel.childNodes[0].nodeValue = emailText[currentLang] || emailText.fr;
+    }
+    
+    const emailInput = document.getElementById('emailInput');
+    if (emailInput) {
+      const emailPlaceholder = {
+        fr: "adresse@mail.com ou Néant",
+        en: "email@domain.com or None",
+        sq: "email@domain.com ose Asnjë",
+        ar: "email@domain.com أو لا شيء",
+        ru: "email@domain.com или Отсутствует",
+        ka: "email@domain.com ან არცერთი",
+        ps: "email@domain.com یا هیڅ",
+        it: "email@domain.com o Nessuno",
+        es: "email@domain.com o Ninguno"
+      };
+      emailInput.placeholder = emailPlaceholder[currentLang] || emailPlaceholder.fr;
+    }
+    
+    // Navigation buttons
+    document.querySelectorAll('.btn.btn-secondary').forEach(btn => {
+      if (btn.textContent.trim() === 'Retour' || btn.textContent.trim() === 'Back') {
+        const backText = {
+          fr: "Retour",
+          en: "Back",
+          sq: "Kthehu",
+          ar: "رجوع",
+          ru: "Назад",
+          ka: "უკან",
+          ps: "شاته",
+          it: "Indietro",
+          es: "Atrás"
+        };
+        btn.textContent = backText[currentLang] || backText.fr;
+      }
+    });
+    
+    document.querySelectorAll('.btn.btn-primary').forEach(btn => {
+      if (btn.textContent.trim() === 'Continuer' || btn.textContent.trim() === 'Continue') {
+        const continueText = {
+          fr: "Continuer",
+          en: "Continue",
+          sq: "Vazhdo",
+          ar: "استمر",
+          ru: "Продолжить",
+          ka: "გაგრძელება",
+          ps: "دوام",
+          it: "Continua",
+          es: "Continuar"
+        };
+        btn.textContent = continueText[currentLang] || continueText.fr;
+      }
+    });
+    
+    // Étape 3 - Explications
+    const step3Title = document.querySelector('.form-step[data-step="3"] h2');
+    if (step3Title) {
+      const explanationTitle = {
+        fr: "Explications et prise en charge",
+        en: "Explanations and care",
+        sq: "Shpjegime dhe kujdes",
+        ar: "تفسيرات ورعاية",
+        ru: "Объяснения и уход",
+        ka: "განმარტებები და ზრუნვა",
+        ps: "توضیحات او پاملرنه",
+        it: "Spiegazioni e assistenza",
+        es: "Explicaciones y cuidados"
+      };
+      step3Title.textContent = explanationTitle[currentLang] || explanationTitle.fr;
+    }
+    
+    const explanationItems = document.querySelectorAll('.form-step[data-step="3"] ul li');
+    if (explanationItems.length >= 3) {
+      const explanations = {
+        fr: [
+          "Vous êtes mis à l'abri dans ce bâtiment à titre gratuit par le SIAO.",
+          "Vous resterez ici pour une durée très limitée avant d'être orienté vers un hôtel.",
+          "Le but de votre passage ici est de désinfecter toutes vos affaires et d'être éventuellement vu par l'équipe mobile d'antenne pour évaluer votre situation."
+        ],
+        en: [
+          "You are being sheltered in this building free of charge by SIAO.",
+          "You will stay here for a very limited time before being directed to a hotel.",
+          "The purpose of your stay here is to disinfect all your belongings and possibly be seen by the mobile antenna team to assess your situation."
+        ],
+        sq: [
+          "Ju jeni strehuar në këtë ndërtesë falas nga SIAO.",
+          "Ju do të qëndroni këtu për një kohë shumë të kufizuar para se të drejtoheni në një hotel.",
+          "Qëllimi i qëndrimit tuaj këtu është të dezinfektoni të gjitha sendet tuaja dhe mundësisht të shihen nga ekipi i antenës mobile për të vlerësuar situatën tuaj."
+        ],
+        ar: [
+          "أنت محمي في هذا المبنى مجانًا من قبل SIAO.",
+          "ستبقى هنا لفترة محدودة جدًا قبل أن يتم توجيهك إلى فندق.",
+          "الغرض من إقامتك هنا هو تطهير جميع متعلقاتك وربما يتم رؤيتك من قبل فريق الهوائي المتنقل لتقييم وضعك."
+        ],
+        ru: [
+          "Вас бесплатно приютили в этом здании организацией SIAO.",
+          "Вы останетесь здесь на очень ограниченное время, прежде чем вас направят в отель.",
+          "Цель вашего пребывания здесь - дезинфицировать все ваши вещи и, возможно, быть осмотренным мобильной командой антенны для оценки вашей ситуации."
+        ],
+        ka: [
+          "თქვენ ამ შენობაში უფასოდ გაძლევთ თავშესაფარს SIAO.",
+          "თქვენ აქ დარჩებით ძალიან შეზღუდული დროით, სანამ მიგმართავენ სასტუმროში.",
+          "თქვენი აქ ყოფნის მიზანია თქვენი ნივთების დეზინფექცია და შესაძლებელია მობილური ანტენის გუნდის მიერ თქვენი ვითარების შეფასება."
+        ],
+        ps: [
+          "تاسو په دې ودانۍ کې د SIAO لخوا وړیا پناه درکړل شوې ده.",
+          "تاسو به دلته د ډیر محدود وخت لپاره پاتې شئ مخکې له دې چې هوټل ته لارښوونه وشي.",
+          "دلته ستاسو د اوسیدو موخه دا ده چې ستاسو ټول شیان ضد عفوني کړي او ممکن د موبایل انتن ټیم لخوا ستاسو د حالت ارزونې لپاره وکتل شي."
+        ],
+        it: [
+          "Sei ospitato in questo edificio gratuitamente da SIAO.",
+          "Rimarrai qui per un tempo molto limitato prima di essere indirizzato a un hotel.",
+          "Lo scopo del tuo soggiorno qui è disinfettare tutti i tuoi effetti personali ed eventualmente essere visto dal team di antenna mobile per valutare la tua situazione."
+        ],
+        es: [
+          "Usted está siendo albergado en este edificio de forma gratuita por SIAO.",
+          "Permanecerá aquí por un tiempo muy limitado antes de ser dirigido a un hotel.",
+          "El propósito de su estancia aquí es desinfectar todas sus pertenencias y posiblemente ser visto por el equipo de antena móvil para evaluar su situación."
+        ]
+      };
+      
+      const currentExplanations = explanations[currentLang] || explanations.fr;
+      explanationItems.forEach((item, index) => {
+        if (index < currentExplanations.length) {
+          item.textContent = currentExplanations[index];
+        }
+      });
+    }
+    // Étape 4 - Règlement à lire
+const step4Title = document.querySelector('.form-step[data-step="4"] h2');
+if (step4Title) {
+  const rulesTitleText = {
+    fr: "Résumé du règlement intérieur, voici les règles principales du règlement auquel il ne faut absolument pas dérogé pour le bien de tout les résidents. Le règlement complet vous sera envoyé via Whatsapp ou par mail",
+    en: "Summary of internal rules, here are the main rules that must absolutely not be violated for the well-being of all residents. The complete regulations will be sent to you via Whatsapp or by email",
+    sq: "Përmbledhje e rregullave të brendshme, këtu janë rregullat kryesore që absolutisht nuk duhet të shkelen për mirëqenien e të gjithë banorëve. Rregulloret e plota do t'ju dërgohen përmes Whatsapp ose email",
+    ar: "ملخص للقواعد الداخلية، هنا القواعد الرئيسية التي يجب عدم انتهاكها مطلقًا لرفاهية جميع المقيمين. سيتم إرسال اللوائح الكاملة إليك عبر Whatsapp أو البريد الإلكتروني",
+    ru: "Краткое изложение внутренних правил, вот основные правила, которые категорически нельзя нарушать для благополучия всех жителей. Полные правила будут отправлены вам через WhatsApp или по электронной почте",
+    ka: "შიდა წესების მოკლე შინაარსი, აქ არის მთავარი წესები, რომლებიც აბსოლუტურად არ უნდა დაირღვეს ყველა მაცხოვრებლის კეთილდღეობისთვის. სრული წესები გამოგეგზავნებათ WhatsApp-ის ან ელფოსტის საშუალებით",
+    ps: "د کورنیو مقرراتو لنډیز، دلته هغه اصلي قواعد دي چې د ټولو اوسیدونکو د هوساینې لپاره باید په مطلق ډول نه پلي کیږي. بشپړ مقررات به تاسو ته د Whatsapp یا بریښنالیک له لارې واستول شي",
+    it: "Riepilogo del regolamento interno, ecco le regole principali che non devono essere assolutamente violate per il benessere di tutti i residenti. Il regolamento completo ti sarà inviato tramite Whatsapp o e-mail",
+    es: "Resumen de las normas internas, aquí están las principales reglas que absolutamente no deben ser violadas para el bienestar de todos los residentes. Las normas completas se le enviarán por Whatsapp o correo electrónico"
+  };
+  step4Title.textContent = rulesTitleText[currentLang] || rulesTitleText.fr;
+}
+
+const rulesTitle = document.querySelector('.form-step[data-step="4"] .bg-gray-50 strong');
+if (rulesTitle) {
+  const rulesTitleText = {
+    fr: "Règles :",
+    en: "Rules:",
+    sq: "Rregullat:",
+    ar: "القواعد:",
+    ru: "Правила:",
+    ka: "წესები:",
+    ps: "قواعد:",
+    it: "Regole:",
+    es: "Reglas:"
+  };
+  rulesTitle.textContent = rulesTitleText[currentLang] || rulesTitleText.fr;
+}
+
+const ruleItems = document.querySelectorAll('.form-step[data-step="4"] .bg-gray-50 ol li');
+if (ruleItems.length >= 6) {
+  const rules = {
+    fr: [
+      "L'accès au bâtiment est interdite à toute personnes en dehors de celle prévu par le bon de prise en charge, absolument interdit de ramener un ami ou un proche de la famille même un instant dans le bâtiment. Il est réservé uniquement aux résidents.",
+      "Il est interdit de dormir ailleurs qu'ici pendant votre séjour, même une nuit, si il y a une urgence et que vous devez dormir à l'extérieur du bâtiment il faudra une autorisation du SIAO. Dans le cas où notre équipe se rend compte que vous ne dormez pas sur place, le SIAO sera prévenu et vous risquez de perdre votre place.",
+      "Il est strictement interdit de ramener des affaires personnelles dans le bâtiment sans qu'elles soient passées en désinfection, il faudra donc prévenir la personne sur place dans le cas où d'autres affaires sont ramenées avec vous.",
+      "La feuille de présence doit être signée tous les jours avant 12h00, la feuille de présence ne doit jamais être signée à l'avance. Ce point est très important car les feuilles de présence sont transmises au SIAO quotidiennement.",
+      "Il est interdit de ramener des appareils électroniques dans le bâtiment, tout ce dont vous avez besoin est déjà fourni.",
+      "Le bâtiment est non fumeur."
+    ],
+    en: [
+      "Access to the building is prohibited to any person outside of those provided for by the care voucher. It is absolutely forbidden to bring a friend or relative of the family, even for a moment, into the building. It is reserved for residents only.",
+      "It is forbidden to sleep elsewhere than here during your stay, even for one night. If there is an emergency and you need to sleep outside the building, you will need authorization from SIAO. If our team notices that you are not sleeping on site, SIAO will be notified and you risk losing your place.",
+      "It is strictly forbidden to bring personal belongings into the building without them being disinfected. You must inform the person on site if other belongings are brought with you.",
+      "The attendance sheet must be signed every day before 12:00 PM. The attendance sheet must never be signed in advance. This point is very important because the attendance sheets are transmitted to SIAO daily.",
+      "It is forbidden to bring electronic devices into the building; everything you need is already provided.",
+      "The building is non-smoking."
+    ],
+    sq: [
+      "Hyrja në ndërtesë është e ndaluar për çdo person jashtë atyre të përcaktuara nga kuponi i kujdesit. Është absolutisht e ndaluar të sjellësh një mik ose të afërm të familjes, qoftë edhe për një moment, në ndërtesë. Është e rezervuar vetëm për banorët.",
+      "Është e ndaluar të flini diku tjetër përveç këtu gjatë qëndrimit tuaj, edhe për një natë. Nëse ka një emergjencë dhe ju duhet të flini jashtë ndërtesës, do t'ju duhet autorizim nga SIAO. Nëse ekipi ynë vëren se nuk po flini në vend, SIAO do të njoftohet dhe rrezikoni të humbni vendin tuaj.",
+      "Është rreptësisht e ndaluar të sillni sende personale në ndërtesë pa u dezinfektuar. Ju duhet të informoni personin në vend nëse sillni me vete sende të tjera.",
+      "Fleta e pjesëmarrjes duhet të nënshkruhet çdo ditë para orës 12:00. Fleta e pjesëmarrjes nuk duhet kurrë të nënshkruhet paraprakisht. Ky pikë është shumë e rëndësishme sepse fletët e pjesëmarrjes i transmetohen SIAO çdo ditë.",
+      "Është e ndaluar të sjellësh pajisje elektronike në ndërtesë; gjithçka që ju nevojitet është tashmë e ofruar.",
+      "Ndërtesa është për jo-duhanpirës."
+    ],
+    ar: [
+      "يُمنع الدخول إلى المبنى لأي شخص خارج المحددين في قسيمة الرعاية. يُمنع منعاً باتاً إحضار صديق أو قريب للعائلة، حتى للحظة، إلى المبنى. هو مخصص للمقيمين فقط.",
+      "يُمنع النوم في مكان آخر غير هنا خلال إقامتك، حتى لليلة واحدة. إذا كانت هناك حالة طوارئ وتحتاج إلى النوم خارج المبنى، ستحتاج إلى إذن من SIAO. إذا لاحظ فريقنا أنك لا تنام في الموقع، سيتم إخطار SIAO وتخاطر بفقدان مكانك.",
+      "يُمنع منعاً باتاً إحضار متعلقات شخصية إلى المبنى دون تطهيرها. يجب عليك إبلاغ الشخص الموجود في الموقع إذا تم إحضار متعلقات أخرى معك.",
+      "يجب توقيع ورقة الحضور كل يوم قبل الساعة 12:00 ظهرًا. يجب ألا يتم توقيع ورقة الحضور مسبقًا أبدًا. هذه النقطة مهمة جدًا لأن أوراق الحضور تُرسل إلى SIAO يوميًا.",
+      "يُمنع إحضار أجهزة إلكترونية إلى المبنى؛ كل ما تحتاجه موجود بالفعل.",
+      "المبنى خالٍ من التدخين."
+    ],
+    ru: [
+      "Доступ в здание запрещен любому лицу, кроме тех, кто предусмотрен ваучером на уход. Категорически запрещается приводить друга или родственника семьи, даже на мгновение, в здание. Оно предназначено только для жителей.",
+      "Запрещается спать в другом месте, кроме здесь, во время вашего пребывания, даже на одну ночь. Если возникает чрезвычайная ситуация, и вам нужно спать вне здания, вам потребуется разрешение от SIAO. Если наша команда заметит, что вы не спите на месте, SIAO будет уведомлен, и вы рискуете потерять свое место.",
+      "Строго запрещено приносить личные вещи в здание без их дезинфекции. Вы должны сообщить человеку на месте, если с вами принесены другие вещи.",
+      "Лист присутствия должен подписываться каждый день до 12:00. Лист присутствия никогда не должен подписываться заранее. Этот пункт очень важен, потому что листы присутствия передаются в SIAO ежедневно.",
+      "Запрещено приносить электронные устройства в здание; все необходимое уже предоставлено.",
+      "Здание является некурящим."
+    ],
+    ka: [
+      "შენობაში შესვლა აკრძალულია ნებისმიერი პირისთვის, გარდა იმ პირებისა, რომლებიც გათვალისწინებულია მოვლის ვაუჩერით. კატეგორიულად აკრძალულია მეგობრის ან ოჯახის ნათესავის შემოყვანა, თუნდაც ერთი წუთით, შენობაში. ის განკუთვნილია მხოლოდ მაცხოვრებლებისთვის.",
+      "აკრძალულია სხვაგან დაძინება თქვენი აქ ყოფნის განმავლობაში, თუნდაც ერთი ღამით. თუ არის საგანგებო სიტუაცია და გჭირდებათ შენობის გარეთ დაძინება, დაგჭირდებათ ნებართვა SIAO-სგან. თუ ჩვენი გუნდი შეამჩნევს, რომ თქვენ არ გძინავთ ადგილზე, SIAO იქნება შეტყობინებული და რისკავთ თქვენი ადგილის დაკარგვას.",
+      "მკაცრად აკრძალულია პირადი ნივთების შენობაში შემოტანა მათი დეზინფექციის გარეშე. თქვენ უნდა აცნობოთ ადგილზე მყოფ პირს, თუ თქვენთან ერთად არის მოტანილი სხვა ნივთები.",
+      "დასწრების ფურცელი ხელმოწერილი უნდა იყოს ყოველ დღე 12:00 საათამდე. დასწრების ფურცელი არასდროს არ უნდა იყოს წინასწარ ხელმოწერილი. ეს პუნქტი ძალიან მნიშვნელოვანია, რადგან დასწრების ფურცლები ყოველდღიურად ეგზავნება SIAO-ს.",
+      "აკრძალულია ელექტრონული მოწყობილობების შენობაში შემოტანა; ყველაფერი, რაც გჭირდებათ, უკვე მოწოდებულია.",
+      "შენობა არის არამოწევადი."
+    ],
+    ps: [
+      "د ودانۍ لاسرسی د پاملرنې واؤچر لخوا وړاندې شوي کسانو پرته هر چا ته منع دی. دا مطلق منع دی چې د کورنۍ دوست یا خپلوان، حتی د یوې شېبې لپاره هم، ودانۍ ته راوړل شي. دا یوازې اوسېدونکو لپاره ځانګړی شوی.",
+      "دلته د پاتې کېدو پر مهال، حتی د یوې شپې لپاره هم، بل ځای خوب کول منع دی. که چېرې بېړنۍ حالت وي او تاسو اړتیا لرئ چې د ودانۍ څخه بهر خوب وکړئ، تاسو به د SIAO څخه اجازه ته اړتیا ولرئ. که زمونږ ټیم وګوري چې تاسو په ځای کې خوب نه کوئ، SIAO به خبر شي او تاسو خپل ځای د لاسه ورکولو خطر سره مخ یاست.",
+      "د شخصي توکو راوړل په ودانۍ کې پرته له دې چې ضد عفوني شي، په کلکه منع دی. تاسو باید په ځای کې شخص ته خبر ورکړئ که چېرې نور توکي ستاسو سره راوړل شوي وي.",
+      "د حاضرۍ پاڼه باید هره ورځ د غرمې 12:00 بجو مخکې لاسلیک شي. د حاضرۍ پاڼه باید هیڅکله مخکې لاسلیک نشي. دا ټکی ډیر مهم دی ځکه چې د حاضرۍ پاڼې هره ورځ SIAO ته لیږدول کیږي.",
+      "په ودانۍ کې د برېښنایي وسایلو راوړل منع دی؛ هر هغه څه چې تاسو اړتیا لرئ مخکې له مخکې چمتو شوي.",
+      "ودانۍ د سګرټ څکولو لپاره نه ده."
+    ],
+    it: [
+      "L'accesso all'edificio è vietato a qualsiasi persona al di fuori di quelle previste dal voucher di assistenza. È assolutamente vietato portare un amico o un parente della famiglia, anche solo per un momento, nell'edificio. È riservato solo ai residenti.",
+      "È vietato dormire altrove durante il soggiorno, anche per una notte. Se c'è un'emergenza e hai bisogno di dormire fuori dall'edificio, avrai bisogno dell'autorizzazione da SIAO. Se il nostro team nota che non stai dormendo in loco, SIAO sarà avvisato e rischi di perdere il tuo posto.",
+      "È severamente vietato portare oggetti personali nell'edificio senza che vengano disinfettati. Devi informare la persona sul posto se vengono portati con te altri oggetti.",
+      "Il foglio presenze deve essere firmato ogni giorno prima delle 12:00. Il foglio presenze non deve mai essere firmato in anticipo. Questo punto è molto importante perché i fogli presenze vengono trasmessi a SIAO quotidianamente.",
+      "È vietato portare dispositivi elettronici nell'edificio; tutto ciò di cui hai bisogno è già fornito.",
+      "L'edificio è non fumatori."
+    ],
+    es: [
+      "El acceso al edificio está prohibido a cualquier persona fuera de las previstas por el vale de cuidado. Está absolutamente prohibido traer a un amigo o familiar de la familia, incluso por un momento, al edificio. Está reservado solo para residentes.",
+      "Está prohibido dormir en otro lugar durante su estancia, incluso por una noche. Si hay una emergencia y necesita dormir fuera del edificio, necesitará autorización de SIAO. Si nuestro equipo nota que no está durmiendo en el sitio, se notificará a SIAO y corre el riesgo de perder su lugar.",
+      "Está estrictamente prohibido traer pertenencias personales al edificio sin que sean desinfectadas. Debe informar a la persona en el sitio si se traen otras pertenencias con usted.",
+      "La hoja de asistencia debe firmarse todos los días antes de las 12:00 PM. La hoja de asistencia nunca debe firmarse por adelantado. Este punto es muy importante porque las hojas de asistencia se transmiten a SIAO diariamente.",
+      "Está prohibido traer dispositivos electrónicos al edificio; todo lo que necesita ya está proporcionado.",
+      "El edificio es para no fumadores."
+    ]
+  };
+  
+  const currentRules = rules[currentLang] || rules.fr;
+  ruleItems.forEach((item, index) => {
+    if (index < currentRules.length) {
+      item.textContent = currentRules[index];
+    }
+  });
+}
+
+const readRulesLabel = document.querySelector('label:has(#readRules) span');
+if (readRulesLabel) {
+  const readRulesText = {
+    fr: "J'ai lu et compris le règlement intérieur",
+    en: "I have read and understood the internal regulations",
+    sq: "Unë i kam lexuar dhe kuptuar rregulloret e brendshme",
+    ar: "لقد قرأت وفهمت اللوائح الداخلية",
+    ru: "Я прочитал(а) и понял(а) внутренние правила",
+    ka: "წავიკითხე და გავიგე შიდა წესები",
+    ps: "ما داخلي مقررات لوستلي او پوه شوی یم",
+    it: "Ho letto e compreso il regolamento interno",
+    es: "He leído y entendido las normas internas"
+  };
+  readRulesLabel.textContent = readRulesText[currentLang] || readRulesText.fr;
+}
+
+const rulesError = document.getElementById('rulesError');
+if (rulesError) {
+  const rulesErrorText = {
+    fr: "Merci de cocher la case : vous devez lire et accepter le règlement pour continuer.",
+    en: "Please check the box: you must read and accept the regulations to continue.",
+    sq: "Ju lutemi kontrolloni kutinë: ju duhet të lexoni dhe pranoni rregulloret për të vazhduar.",
+    ar: "يرجى التحقق من المربع: يجب عليك قراءة وقبول اللوائح للمتابعة.",
+    ru: "Пожалуйста, отметьте ячейку: вы должны прочитать и принять правила, чтобы продолжить.",
+    ka: "გთხოვთ მონიშნოთ უჯრა: თქვენ უნდა წაიკითხოთ და დაეთანხმოთ წესებს გასაგრძელებლად.",
+    ps: "مهرباني وکړئ بکس چیک کړئ: تاسو باید د دوام لپاره مقررات ولولئ او ومنئ.",
+    it: "Si prega di spuntare la casella: devi leggere e accettare il regolamento per continuare.",
+    es: "Por favor, marque la casilla: debe leer y aceptar las normas para continuar."
+  };
+  rulesError.textContent = rulesErrorText[currentLang] || rulesErrorText.fr;
+}
+
+// Étape 5 - Quiz
+const step5Title = document.querySelector('.form-step[data-step="5"] h2');
+if (step5Title) {
+  const quizTitleText = {
+    fr: "Quiz sur le règlement",
+    en: "Quiz on regulations",
+    sq: "Kuiz mbi rregulloret",
+    ar: "اختبار على اللوائح",
+    ru: "Тест по правилам",
+    ka: "ტესტი წესებზე",
+    ps: "د مقرراتو په اړه ازموینه",
+    it: "Quiz sul regolamento",
+    es: "Cuestionario sobre las normas"
+  };
+  step5Title.textContent = quizTitleText[currentLang] || quizTitleText.fr;
+}
+
+const quizLabels = document.querySelectorAll('.form-step[data-step="5"] #quizBlock label');
+if (quizLabels.length >= 3) {
+  const questions = {
+    fr: [
+      "Avez-vous le droit de ramener des amis pour visiter ou boire un café ?",
+      "Avez-vous le droit de rapporter des valises non désinfectées ?",
+      "Avez-vous le droit de rentrer après 1h du matin ?"
+    ],
+    en: [
+      "Are you allowed to bring friends to visit or have coffee?",
+      "Are you allowed to bring non-disinfected suitcases?",
+      "Are you allowed to return after 1 AM?"
+    ],
+    sq: [
+      "A ju lejohet të sillni miq për vizitë ose për të pirë kafe?",
+      "A ju lejohet të sillni valixhe të padezinfektuara?",
+      "A ju lejohet të ktheheni pas orës 1 të mëngjesit?"
+    ],
+    ar: [
+      "هل يُسمح لك بإحضار أصدقاء للزيارة أو لتناول القهوة؟",
+      "هل يُسمح لك بإحضار حقائب غير مطهرة؟",
+      "هل يُسمح لك بالعودة بعد الساعة 1 صباحًا؟"
+    ],
+    ru: [
+      "Разрешается ли вам приводить друзей для посещения или выпить кофе?",
+      "Разрешается ли вам приносить недезинфицированные чемоданы?",
+      "Разрешается ли вам возвращаться после 1 часа ночи?"
+    ],
+    ka: [
+      "გაქვთ თუ არა უფლება მოიყვანოთ მეგობრები სტუმრად ან ყავის დასალევად?",
+      "გაქვთ თუ არა უფლება შემოიტანოთ არადეზინფიცირებული ჩემოდნები?",
+      "გაქვთ თუ არა უფლება დაბრუნდეთ დილის 1 საათის შემდეგ?"
+    ],
+    ps: [
+      "آیا تاسو ته اجازه ده چې ملګري د لیدنې یا قهوې څښلو لپاره راولئ؟",
+      "آیا تاسو ته اجازه ده چې غیر ضد عفوني شوي بکسونه راوړئ؟",
+      "آیا تاسو ته اجازه ده چې د سهار 1 بجې وروسته راستانه شئ؟"
+    ],
+    it: [
+      "Ti è permesso portare amici in visita o per prendere un caffè?",
+      "Ti è permesso portare valigie non disinfettate?",
+      "Ti è permesso rientrare dopo l'1 di notte?"
+    ],
+    es: [
+      "¿Se le permite traer amigos para visitar o tomar café?",
+      "¿Se le permite traer maletas no desinfectadas?",
+      "¿Se le permite regresar después de la 1 AM?"
+    ]
+  };
+  
+  const currentQuestions = questions[currentLang] || questions.fr;
+  quizLabels.forEach((label, index) => {
+    if (index < currentQuestions.length) {
+      label.textContent = currentQuestions[index];
+    }
+  });
+}
+
+// Mettre à jour les options du quiz
+document.querySelectorAll('.form-step[data-step="5"] select').forEach(select => {
+  const firstOption = select.querySelector('option:first-child');
+  if (firstOption) {
+    const selectText = {
+      fr: "Sélectionner...",
+      en: "Select...",
+      sq: "Zgjidhni...",
+      ar: "اختر...",
+      ru: "Выбрать...",
+      ka: "აირჩიეთ...",
+      ps: "غوره کړئ...",
+      it: "Seleziona...",
+      es: "Seleccionar..."
+    };
+    firstOption.textContent = selectText[currentLang] || selectText.fr;
+  }
+  
+  const yesOption = select.querySelector('option[value="oui"]');
+  if (yesOption) {
+    const yesText = {
+      fr: "Oui",
+      en: "Yes",
+      sq: "Po",
+      ar: "نعم",
+      ru: "Да",
+      ka: "დიახ",
+      ps: "هو",
+      it: "Sì",
+      es: "Sí"
+    };
+    yesOption.textContent = yesText[currentLang] || yesText.fr;
+    yesOption.value = yesText[currentLang].toLowerCase() || yesText.fr.toLowerCase();
+  }
+  
+  const noOption = select.querySelector('option[value="non"]');
+  if (noOption) {
+    const noText = {
+      fr: "Non",
+      en: "No",
+      sq: "Jo",
+      ar: "لا",
+      ru: "Нет",
+      ka: "არა",
+      ps: "نه",
+      it: "No",
+      es: "No"
+    };
+    noOption.textContent = noText[currentLang] || noText.fr;
+    noOption.value = noText[currentLang].toLowerCase() || noText.fr.toLowerCase();
+  }
+});
+
+const quizError = document.getElementById('quizError');
+if (quizError) {
+  const quizErrorText = {
+    fr: "Les réponses sont incorrectes. Veuillez relire le règlement.",
+    en: "The answers are incorrect. Please reread the regulations.",
+    sq: "Përgjigjet janë të pasakta. Ju lutemi rilexoni rregulloret.",
+    ar: "الإجابات غير صحيحة. يرجى إعادة قراءة اللوائح.",
+    ru: "Ответы неверны. Пожалуйста, перечитайте правила.",
+    ka: "პასუხები არასწორია. გთხოვთ, ხელახლა წაიკითხოთ წესები.",
+    ps: "ځوابونه ناسم دي. مهرباني وکړئ مقررات بیا ولولئ.",
+    it: "Le risposte sono errate. Si prega di rileggere il regolamento.",
+    es: "Las respuestas son incorrectas. Por favor, vuelva a leer las normas."
+  };
+  quizError.textContent = quizErrorText[currentLang] || quizErrorText.fr;
+}
+    // Étape 6 - Signature électronique
+const step6Title = document.querySelector('.form-step[data-step="6"] h2');
+if (step6Title) {
+  const signatureTitleText = {
+    fr: "Signature électronique du règlement",
+    en: "Electronic signature of regulations",
+    sq: "Nënshkrimi elektronik i rregulloreve",
+    ar: "التوقيع الإلكتروني على اللوائح",
+    ru: "Электронная подпись правил",
+    ka: "წესების ელექტრონული ხელმოწერა",
+    ps: "د مقرراتو بریښنایی لاسلیک",
+    it: "Firma elettronica del regolamento",
+    es: "Firma electrónica de las normas"
+  };
+  step6Title.textContent = signatureTitleText[currentLang] || signatureTitleText.fr;
+}
+
+const signaturePrompt = document.querySelector('.form-step[data-step="6"] p.mb-2');
+if (signaturePrompt) {
+  const signPromptText = {
+    fr: "Signez ci-dessous pour attester votre accord au règlement :",
+    en: "Sign below to certify your agreement to the regulations:",
+    sq: "Nënshkruani më poshtë për të vërtetuar marrëveshjen tuaj me rregulloret:",
+    ar: "وقّع أدناه للتصديق على موافقتك على اللوائح:",
+    ru: "Подпишитесь ниже, чтобы подтвердить ваше согласие с правилами:",
+    ka: "ხელი მოაწერეთ ქვემოთ წესებთან თქვენი თანხმობის დასადასტურებლად:",
+    ps: "د مقرراتو سره د خپل موافقت تصدیق لپاره لاندې لاسلیک وکړئ:",
+    it: "Firma qui sotto per certificare il tuo accordo con il regolamento:",
+    es: "Firme abajo para certificar su acuerdo con las normas:"
+  };
+  signaturePrompt.textContent = signPromptText[currentLang] || signPromptText.fr;
+}
+
+const clearSignBtn = document.querySelector('.form-step[data-step="6"] button.btn-neutral');
+if (clearSignBtn) {
+  const clearBtnText = {
+    fr: "Effacer la signature",
+    en: "Clear signature",
+    sq: "Pastro nënshkrimin",
+    ar: "مسح التوقيع",
+    ru: "Очистить подпись",
+    ka: "ხელმოწერის გასუფთავება",
+    ps: "لاسلیک پاک کړئ",
+    it: "Cancella firma",
+    es: "Borrar firma"
+  };
+  clearSignBtn.innerHTML = `<i class="fa fa-eraser"></i> ${clearBtnText[currentLang] || clearBtnText.fr}`;
+}
+
+const signatureError = document.getElementById('signatureError');
+if (signatureError) {
+  const signErrorText = {
+    fr: "Veuillez signer pour continuer.",
+    en: "Please sign to continue.",
+    sq: "Ju lutemi nënshkruani për të vazhduar.",
+    ar: "يرجى التوقيع للمتابعة.",
+    ru: "Пожалуйста, подпишите, чтобы продолжить.",
+    ka: "გთხოვთ, ხელი მოაწეროთ გასაგრძელებლად.",
+    ps: "د دوام لپاره مهرباني وکړئ لاسلیک وکړئ.",
+    it: "Si prega di firmare per continuare.",
+    es: "Por favor, firme para continuar."
+  };
+  signatureError.textContent = signErrorText[currentLang] || signErrorText.fr;
+}
+
+// Étape 7 - Gestion des bagages
+const step7Title = document.querySelector('.form-step[data-step="7"] h2');
+if (step7Title) {
+  const luggageTexts = {
+    fr: {
+      title: "Vos valises vont devoir être mises dans un congélateur pendant 48h minimum. Ce procédé permet l'élimination des punaises de lit ou des cafards. Même si vous pensez ne pas avoir de nuisibles, cette procédure est obligatoire.",
+      instruction1: "Vous avez le droit de trier vos affaires tout de suite et de faire un sac d'affaires que nous allons passer au sèche-linge puis vous rendre dans 30 minutes.",
+      instruction2: "Maintenant, faites ce sac d'affaires que vous pourrez récupérer tout de suite, le reste va au congélateur et vous le récupérerez dans 48h.",
+      instruction3: "Vous avez le droit à maximum 1,5 valises/sac d'affaires avec vous par personne. L'excédent doit être remis à un tiers ou jeté."
+    },
+    en: {
+      title: "Your suitcases will need to be placed in a freezer for a minimum of 48 hours. This process allows for the elimination of bed bugs or cockroaches. Even if you think you don't have pests, this procedure is mandatory.",
+      instruction1: "You have the right to sort your belongings right away and make a bag of items that we will pass through the dryer and return to you in 30 minutes.",
+      instruction2: "Now, make this bag of items that you can recover right away; the rest goes to the freezer, and you will recover it in 48 hours.",
+      instruction3: "You are entitled to a maximum of 1.5 suitcases/bags of belongings per person. The excess must be given to a third party or discarded."
+    },
+    sq: {
+      title: "Valixhet tuaja do të duhet të vendosen në një ngrirës për minimum 48 orë. Ky proces lejon eliminimin e insekteve ose bublat. Edhe nëse mendoni se nuk keni insekte, kjo procedurë është e detyrueshme.",
+      instruction1: "Ju keni të drejtë të ndani gjërat tuaja menjëherë dhe të bëni një çantë me sende që ne do t'i kalojmë përmes tharëses dhe t'jua kthejmë në 30 minuta.",
+      instruction2: "Tani, bëni këtë çantë me sende që mund t'i rikuperoni menjëherë; pjesa tjetër shkon në ngrirës dhe ju do ta rikuperoni atë në 48 orë.",
+      instruction3: "Ju keni të drejtë në maksimum 1.5 valixhe/çanta me sende për person. Teprica duhet t'i jepet një pale të tretë ose të hidhet."
+    },
+    ar: {
+      title: "سيتعين وضع حقائبك في مجمد لمدة 48 ساعة على الأقل. تسمح هذه العملية بالقضاء على بق الفراش أو الصراصير. حتى لو كنت تعتقد أنه ليس لديك آفات، فإن هذا الإجراء إلزامي.",
+      instruction1: "لديك الحق في فرز متعلقاتك على الفور وإعداد حقيبة من الأغراض التي سنمررها عبر المجفف ونعيدها إليك في غضون 30 دقيقة.",
+      instruction2: "الآن، قم بإعداد هذه الحقيبة من الأغراض التي يمكنك استعادتها على الفور؛ والباقي يذهب إلى المجمد، وستستعيده في غضون 48 ساعة.",
+      instruction3: "يحق لك الحصول على 1.5 حقيبة كحد أقصى لكل شخص. يجب إعطاء الزيادة لطرف ثالث أو التخلص منها."
+    },
+    ru: {
+      title: "Ваши чемоданы необходимо будет поместить в морозильную камеру минимум на 48 часов. Этот процесс позволяет избавиться от постельных клопов или тараканов. Даже если вы думаете, что у вас нет вредителей, эта процедура обязательна.",
+      instruction1: "У вас есть право сразу отсортировать ваши вещи и собрать сумку вещей, которые мы пропустим через сушилку и вернем вам через 30 минут.",
+      instruction2: "Теперь соберите эту сумку вещей, которую вы можете получить сразу; остальное идет в морозильную камеру, и вы получите их через 48 часов.",
+      instruction3: "Вам разрешается максимум 1,5 чемодана/сумки вещей на человека. Излишки должны быть переданы третьему лицу или выброшены."
+    },
+    ka: {
+      title: "თქვენი ჩემოდნები უნდა მოთავსდეს საყინულეში მინიმუმ 48 საათის განმავლობაში. ეს პროცესი საშუალებას იძლევა მოიშოროთ საწოლის ბაღლინჯოები ან ტარაკნები. იმ შემთხვევაშიც კი, თუ ფიქრობთ, რომ არ გყავთ მავნებლები, ეს პროცედურა სავალდებულოა.",
+      instruction1: "თქვენ გაქვთ უფლება დაუყოვნებლივ დაახარისხოთ თქვენი ნივთები და შექმნათ ჩანთა ნივთებით, რომლებსაც ჩვენ გავატარებთ საშრობში და დაგიბრუნებთ 30 წუთში.",
+      instruction2: "ახლა, შექმენით ეს ჩანთა ნივთებით, რომლებიც შეგიძლიათ დაუყოვნებლივ დაიბრუნოთ; დანარჩენი მიდის საყინულეში და დაიბრუნებთ მას 48 საათში.",
+      instruction3: "თქვენ გეკუთვნით მაქსიმუმ 1.5 ჩემოდანი/ჩანთა ნივთებით ერთ ადამიანზე. ზედმეტი უნდა გადაეცეს მესამე პირს ან გადაიყაროს."
+    },
+    ps: {
+      title: "ستاسو بکسونه باید لږترلږه 48 ساعتونو لپاره په فریزر کې کېښودل شي. دا پروسه د بسترې کیکو یا کاکروچو له منځه وړلو اجازه ورکوي. حتی که تاسو فکر کوئ چې مضر حشرات نه لرئ، دا کړنلاره لازمي ده.",
+      instruction1: "تاسو حق لرئ چې سمدستي خپل توکي ترتیب کړئ او د توکو کڅوړه جوړه کړئ چې موږ به یې د وچوونکي څخه تیر کړو او تاسو ته به په 30 دقیقو کې بیرته درکړو.",
+      instruction2: "اوس، د توکو دا کڅوړه جوړه کړئ چې تاسو یې سمدستي بیرته ترلاسه کولی شئ؛ پاتې برخه فریزر ته ځي، او تاسو به یې په 48 ساعتونو کې بیرته ترلاسه کړئ.",
+      instruction3: "تاسو د هر کس لپاره اعظمي 1.5 بکسونه/کڅوړې د توکو حق لرئ. اضافي باید دریم کس ته ورکړل شي یا وغورځول شي."
+    },
+    it: {
+      title: "Le tue valigie dovranno essere messe in un congelatore per un minimo di 48 ore. Questo processo permette l'eliminazione di cimici dei letti o scarafaggi. Anche se pensi di non avere parassiti, questa procedura è obbligatoria.",
+      instruction1: "Hai il diritto di ordinare i tuoi effetti personali immediatamente e fare una borsa di oggetti che passeremo nell'asciugatrice e ti restituiremo in 30 minuti.",
+      instruction2: "Ora, fai questa borsa di oggetti che puoi recuperare subito; il resto va nel congelatore e lo recupererai tra 48 ore.",
+      instruction3: "Hai diritto a un massimo di 1,5 valigie/borse di effetti personali per persona. L'eccesso deve essere dato a terzi o scartato."
+    },
+    es: {
+      title: "Sus maletas deberán ser colocadas en un congelador durante un mínimo de 48 horas. Este proceso permite la eliminación de chinches o cucarachas. Incluso si cree que no tiene plagas, este procedimiento es obligatorio.",
+      instruction1: "Tiene derecho a ordenar sus pertenencias de inmediato y hacer una bolsa de artículos que pasaremos por la secadora y le devolveremos en 30 minutos.",
+      instruction2: "Ahora, haga esta bolsa de artículos que puede recuperar de inmediato; el resto va al congelador y lo recuperará en 48 horas.",
+      instruction3: "Tiene derecho a un máximo de 1,5 maletas/bolsas de pertenencias por persona. El exceso debe ser entregado a un tercero o desechado."
+    }
+  };
+  
+  const currentLuggageText = luggageTexts[currentLang] || luggageTexts.fr;
+  step7Title.innerHTML = `
+    ${currentLuggageText.title}
+    <br><br>
+    ${currentLuggageText.instruction1}
+    <br><br>
+    <p class="text-red-600">${currentLuggageText.instruction2}</p>
+    <br><br>
+    ${currentLuggageText.instruction3}
+  `;
+}
+
+const luggageCountLabel = document.querySelector('.form-step[data-step="7"] label.font-medium');
+if (luggageCountLabel) {
+  const countLabelText = {
+    fr: "Combien de valises/sacs d'affaires avez-vous ?",
+    en: "How many suitcases/bags of belongings do you have?",
+    sq: "Sa valixhe/çanta me sende keni?",
+    ar: "كم عدد الحقائب/الأكياس التي لديك؟",
+    ru: "Сколько у вас чемоданов/сумок с вещами?",
+    ka: "რამდენი ჩემოდანი/ჩანთა ნივთებით გაქვთ?",
+    ps: "تاسو څومره بکسونه/کڅوړې لرئ؟",
+    it: "Quante valigie/borse di effetti personali hai?",
+    es: "¿Cuántas maletas/bolsas de pertenencias tiene?"
+  };
+  luggageCountLabel.textContent = countLabelText[currentLang] || countLabelText.fr;
+}
+
+const luggageWarnings = document.querySelectorAll('.form-step[data-step="7"] .bg-yellow-50 p');
+if (luggageWarnings.length >= 2) {
+  const warningTexts = {
+    fr: [
+      "Chaque personne a droit à 1,5 valises. Toute affaire supplémentaire doit être jetée ou stockée ailleurs.",
+      "Les valises vont être stockées dans un congélateur pendant 48h pour désinfection (punaises de lit, cafards, etc). Vous pouvez prendre un petit sac d'affaires d'urgence pour la famille, il passera 30 min au sèche-linge."
+    ],
+    en: [
+      "Each person is entitled to 1.5 suitcases. Any additional items must be discarded or stored elsewhere.",
+      "Suitcases will be stored in a freezer for 48 hours for disinfection (bed bugs, cockroaches, etc.). You can take a small emergency bag for the family; it will go through the dryer for 30 minutes."
+    ],
+    sq: [
+      "Secili person ka të drejtë në 1.5 valixhe. Çdo send shtesë duhet të hidhet ose të ruhet diku tjetër.",
+      "Valixhet do të ruhen në një ngrirës për 48 orë për dezinfektim (insektet e shtratit, bublat, etj). Ju mund të merrni një çantë të vogël emergjence për familjen; ajo do të kalojë nëpër tharëse për 30 minuta."
+    ],
+    ar: [
+      "كل شخص لديه الحق في 1.5 حقيبة. يجب التخلص من أي أغراض إضافية أو تخزينها في مكان آخر.",
+      "سيتم تخزين الحقائب في مجمد لمدة 48 ساعة للتطهير (بق الفراش، صراصير، إلخ). يمكنك أخذ حقيبة طوارئ صغيرة للعائلة؛ ستمر عبر المجفف لمدة 30 دقيقة."
+    ],
+    ru: [
+      "Каждому человеку разрешается 1.5 чемодана. Любые дополнительные вещи должны быть выброшены или хранятся в другом месте.",
+      "Чемоданы будут храниться в морозильной камере в течение 48 часов для дезинфекции (постельные клопы, тараканы и т.д.). Вы можете взять небольшую сумку с предметами первой необходимости для семьи; она пройдет через сушилку в течение 30 минут."
+    ],
+    ka: [
+      "თითოეულ პირს ეკუთვნის 1.5 ჩემოდანი. ნებისმიერი დამატებითი ნივთი უნდა გადაიყაროს ან შეინახოს სხვაგან.",
+      "ჩემოდნები შეინახება საყინულეში 48 საათის განმავლობაში დეზინფექციისთვის (საწოლის ბაღლინჯოები, ტარაკნები და ა.შ.). შეგიძლიათ აიღოთ პატარა საგანგებო ჩანთა ოჯახისთვის; ის გაივლის საშრობში 30 წუთის განმავლობაში."
+    ],
+    ps: [
+      "هر کس د 1.5 بکسونو حق لري. هر اضافي توکي باید وغورځول شي یا په بل ځای کې خوندي شي.",
+      "بکسونه به د ضد عفوني کولو لپاره د 48 ساعتونو لپاره په فریزر کې خوندي شي (د بسترې کیکو، کاکروچو، او داسې نور). تاسو کولی شئ د کورنۍ لپاره یو کوچنی بیړنی کڅوړه واخلئ؛ دا به د 30 دقیقو لپاره وچوونکي څخه تېر شي."
+    ],
+    it: [
+      "Ogni persona ha diritto a 1,5 valigie. Qualsiasi oggetto aggiuntivo deve essere scartato o immagazzinato altrove.",
+      "Le valigie saranno conservate in un congelatore per 48 ore per la disinfezione (cimici dei letti, scarafaggi, ecc.). Puoi prendere una piccola borsa d'emergenza per la famiglia; passerà attraverso l'asciugatrice per 30 minuti."
+    ],
+    es: [
+      "Cada persona tiene derecho a 1,5 maletas. Cualquier artículo adicional debe ser desechado o almacenado en otro lugar.",
+      "Las maletas se almacenarán en un congelador durante 48 horas para desinfección (chinches, cucarachas, etc.). Puede tomar una pequeña bolsa de emergencia para la familia; pasará por la secadora durante 30 minutos."
+    ]
+  };
+  
+  const currentWarnings = warningTexts[currentLang] || warningTexts.fr;
+  luggageWarnings[0].innerHTML = `<i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>${currentWarnings[0]}`;
+  luggageWarnings[1].textContent = currentWarnings[1];
+}
+
+// Étape 8 - Rappel important
+const step8Title = document.querySelector('.form-step[data-step="8"] h2');
+if (step8Title) {
+  const reminderTitleText = {
+    fr: "Rappel important",
+    en: "Important reminder",
+    sq: "Kujtesë e rëndësishme",
+    ar: "تذكير مهم",
+    ru: "Важное напоминание",
+    ka: "მნიშვნელოვანი შეხსენება",
+    ps: "مهم یادونه",
+    it: "Promemoria importante",
+    es: "Recordatorio importante"
+  };
+  step8Title.textContent = reminderTitleText[currentLang] || reminderTitleText.fr;
+}
+
+const reminderText1 = document.querySelector('.form-step[data-step="8"] .bg-yellow-100 p:first-child strong');
+if (reminderText1) {
+  const reminder1Text = {
+    fr: "Il est strictement interdit de ramener d'autres affaires sans prévenir le responsable sur place. Nous voulons nous assurer que vous avez bien compris ce point, si vous devez ramener d'autres affaires que vous avez avec vous en ce moment, il faudra prévenir le responsable afin qu'elles soient mises au congélateur 48h.",
+    en: "It is strictly forbidden to bring other belongings without notifying the person in charge on site. We want to make sure you understand this point well. If you need to bring other belongings that you have with you right now, you will need to notify the person in charge so they can be placed in the freezer for 48 hours.",
+    sq: "Është rreptësisht e ndaluar të sillni sende të tjera pa njoftuar personin përgjegjës në vend. Ne duam të sigurohemi që e kuptoni mirë këtë pikë. Nëse keni nevojë të sillni sende të tjera që keni me vete tani, duhet të njoftoni personin përgjegjës që ato të vendosen në ngrirës për 48 orë.",
+    ar: "يُمنع منعاً باتاً إحضار متعلقات أخرى دون إخطار المسؤول في الموقع. نريد التأكد من أنك تفهم هذه النقطة جيدًا. إذا كنت بحاجة إلى إحضار متعلقات أخرى موجودة معك الآن، ستحتاج إلى إخطار المسؤول حتى يتم وضعها في المجمد لمدة 48 ساعة.",
+    ru: "Строго запрещено приносить другие вещи без уведомления ответственного лица на месте. Мы хотим убедиться, что вы хорошо понимаете этот пункт. Если вам нужно принести другие вещи, которые у вас есть сейчас с собой, вам нужно уведомить ответственное лицо, чтобы они были помещены в морозильную камеру на 48 часов.",
+    ka: "მკაცრად აკრძალულია სხვა ნივთების მოტანა ადგილზე პასუხისმგებელი პირის შეტყობინების გარეშე. ჩვენ გვინდა დავრწმუნდეთ, რომ კარგად გესმით ეს პუნქტი. თუ გჭირდებათ სხვა ნივთების მოტანა, რომლებიც ახლა თან გაქვთ, უნდა შეატყობინოთ პასუხისმგებელ პირს, რათა ისინი განთავსდეს საყინულეში 48 საათის განმავლობაში.",
+    ps: "د ځای مسؤل کس ته د خبر ورکولو پرته د نورو توکو راوړل په کلکه منع دي. موږ غواړو ډاډ ترلاسه کړو چې تاسو دا ټکی ښه پوهیږئ. که تاسو اړتیا لرئ چې نور توکي راوړئ چې تاسو سره اوس شتون لري، تاسو به اړ یاست چې مسؤل کس ته خبر ورکړئ ترڅو هغه د 48 ساعتونو لپاره په فریزر کې کېښودل شي.",
+    it: "È severamente vietato portare altri effetti personali senza avvisare il responsabile sul posto. Vogliamo assicurarci che tu capisca bene questo punto. Se hai bisogno di portare altri oggetti che hai con te in questo momento, dovrai avvisare il responsabile in modo che possano essere messi nel congelatore per 48 ore.",
+    es: "Está estrictamente prohibido traer otras pertenencias sin notificar a la persona encargada en el sitio. Queremos asegurarnos de que entienda bien este punto. Si necesita traer otras pertenencias que tiene con usted en este momento, deberá notificar a la persona encargada para que puedan ser colocadas en el congelador durante 48 horas."
+  };
+  reminderText1.textContent = reminder1Text[currentLang] || reminder1Text.fr;
+}
+
+const reminderText2 = document.querySelector('.form-step[data-step="8"] .bg-yellow-100 p:last-child');
+if (reminderText2) {
+  const reminder2Text = {
+    fr: "En cas d'infraction, nous demanderons une fin de prise en charge au SIAO et vous risquerez de ne plus pouvoir être logé.",
+    en: "In case of violation, we will request an end to SIAO support, and you risk no longer being able to be housed.",
+    sq: "Në rast shkeljeje, ne do të kërkojmë përfundimin e mbështetjes së SIAO dhe ju rrezikoni të mos mund të strehoheni më.",
+    ar: "في حالة المخالفة، سنطلب إنهاء دعم SIAO، وتخاطر بعدم القدرة على السكن بعد الآن.",
+    ru: "В случае нарушения мы запросим прекращение поддержки SIAO, и вы рискуете больше не иметь возможности получить жилье.",
+    ka: "დარღვევის შემთხვევაში, ჩვენ მოვითხოვთ SIAO-ს მხარდაჭერის შეწყვეტას და თქვენ რისკავთ, რომ აღარ შეძლებთ დაბინავებას.",
+    ps: "د سرغړونې په صورت کې، موږ به د SIAO ملاتړ ختمولو غوښتنه وکړو، او تاسو نور د کور موندلو لپاره خطر سره مخ یاست.",
+    it: "In caso di violazione, richiederemo la fine del supporto SIAO e rischi di non poter più essere alloggiato.",
+    es: "En caso de violación, solicitaremos el fin del apoyo de SIAO y corre el riesgo de no poder ser alojado más."
+  };
+  reminderText2.textContent = reminder2Text[currentLang] || reminder2Text.fr;
+}
+
+const understoodLabel = document.querySelector('label:has(#affairesConfirmation) span');
+if (understoodLabel) {
+  const understoodText = {
+    fr: "J'ai compris",
+    en: "I understand",
+    sq: "Unë kuptoj",
+    ar: "أنا أفهم",
+    ru: "Я понимаю",
+    ka: "მესმის",
+    ps: "زه پوهیږم",
+    it: "Ho capito",
+    es: "Entiendo"
+  };
+  understoodLabel.textContent = understoodText[currentLang] || understoodText.fr;
+}
+    const affaireError = document.getElementById('affaireError');
+if (affaireError) {
+  const affaireErrorText = {
+    fr: "Merci de confirmer avoir compris cette règle.",
+    en: "Please confirm that you understand this rule.",
+    sq: "Ju lutemi konfirmoni që e kuptoni këtë rregull.",
+    ar: "يرجى تأكيد فهمك لهذه القاعدة.",
+    ru: "Пожалуйста, подтвердите, что вы понимаете это правило.",
+    ka: "გთხოვთ, დაადასტუროთ, რომ გესმით ეს წესი.",
+    ps: "مهرباني وکړئ تایید کړئ چې تاسو دا قاعده پوهیږئ.",
+    it: "Si prega di confermare di aver compreso questa regola.",
+    es: "Por favor, confirme que entiende esta regla."
+  };
+  affaireError.textContent = affaireErrorText[currentLang] || affaireErrorText.fr;
+}
+
+// Étape 9 - Contrat de prise en charge
+const step9Title = document.querySelector('.form-step[data-step="9"] h2');
+if (step9Title) {
+  const contractTitleText = {
+    fr: "Contrat de prise en charge",
+    en: "Care contract",
+    sq: "Kontrata e kujdesit",
+    ar: "عقد الرعاية",
+    ru: "Договор об уходе",
+    ka: "ზრუნვის ხელშეკრულება",
+    ps: "د پاملرنې تړون",
+    it: "Contratto di assistenza",
+    es: "Contrato de cuidado"
+  };
+  step9Title.textContent = contractTitleText[currentLang] || contractTitleText.fr;
+}
+
+const pdfLoading = document.getElementById('pdfLoading');
+if (pdfLoading) {
+  const loadingText = {
+    fr: "Chargement du contrat...",
+    en: "Loading contract...",
+    sq: "Duke ngarkuar kontratën...",
+    ar: "جاري تحميل العقد...",
+    ru: "Загрузка договора...",
+    ka: "ხელშეკრულების ჩატვირთვა...",
+    ps: "د تړون لوډینګ...",
+    it: "Caricamento del contratto...",
+    es: "Cargando contrato..."
+  };
+  pdfLoading.innerHTML = `<i class="fa fa-spinner fa-spin mr-2"></i> ${loadingText[currentLang] || loadingText.fr}`;
+}
+
+const signContractPrompt = document.querySelector('.form-step[data-step="9"] p.mb-2');
+if (signContractPrompt) {
+  const signPromptText = {
+    fr: "Veuillez signer pour valider le contrat :",
+    en: "Please sign to validate the contract:",
+    sq: "Ju lutemi nënshkruani për të vërtetuar kontratën:",
+    ar: "يرجى التوقيع للتحقق من صحة العقد:",
+    ru: "Пожалуйста, подпишите для проверки договора:",
+    ka: "გთხოვთ, ხელი მოაწეროთ ხელშეკრულების დასადასტურებლად:",
+    ps: "د تړون د تصدیق لپاره مهرباني وکړئ لاسلیک وکړئ:",
+    it: "Si prega di firmare per convalidare il contratto:",
+    es: "Por favor, firme para validar el contrato:"
+  };
+  signContractPrompt.textContent = signPromptText[currentLang] || signPromptText.fr;
+}
+
+const clearSignBtn2 = document.querySelector('.form-step[data-step="9"] button.btn-neutral');
+if (clearSignBtn2) {
+  const clearBtnText = {
+    fr: "Effacer la signature",
+    en: "Clear signature",
+    sq: "Pastro nënshkrimin",
+    ar: "مسح التوقيع",
+    ru: "Очистить подпись",
+    ka: "ხელმოწერის გასუფთავება",
+    ps: "لاسلیک پاک کړئ",
+    it: "Cancella firma",
+    es: "Borrar firma"
+  };
+  clearSignBtn2.innerHTML = `<i class="fa fa-eraser"></i> ${clearBtnText[currentLang] || clearBtnText.fr}`;
+}
+
+const signature2Error = document.getElementById('signature2Error');
+if (signature2Error) {
+  const sign2ErrorText = {
+    fr: "Veuillez signer pour valider le contrat.",
+    en: "Please sign to validate the contract.",
+    sq: "Ju lutemi nënshkruani për të vërtetuar kontratën.",
+    ar: "يرجى التوقيع للتحقق من صحة العقد.",
+    ru: "Пожалуйста, подпишите для проверки договора.",
+    ka: "გთხოვთ, ხელი მოაწეროთ ხელშეკრულების დასადასტურებლად.",
+    ps: "د تړون د تصدیق لپاره مهرباني وکړئ لاسلیک وکړئ.",
+    it: "Si prega di firmare per convalidare il contratto.",
+    es: "Por favor, firme para validar el contrato."
+  };
+  signature2Error.textContent = sign2ErrorText[currentLang] || sign2ErrorText.fr;
+}
+
+// Étape 10 - Fin et code wifi
+const step10Title = document.querySelector('.form-step[data-step="10"] h2');
+if (step10Title) {
+  const thanksTitleText = {
+    fr: "Merci, l'enregistrement est terminé !",
+    en: "Thank you, registration is complete!",
+    sq: "Faleminderit, regjistrimi është i plotë!",
+    ar: "شكرًا لك، اكتمل التسجيل!",
+    ru: "Спасибо, регистрация завершена!",
+    ka: "გმადლობთ, რეგისტრაცია დასრულებულია!",
+    ps: "مننه، راجسټریشن بشپړ شو!",
+    it: "Grazie, la registrazione è completa!",
+    es: "¡Gracias, el registro está completo!"
+  };
+  step10Title.textContent = thanksTitleText[currentLang] || thanksTitleText.fr;
+}
+
+const filesSaved = document.querySelector('.form-step[data-step="10"] p.mb-2');
+if (filesSaved) {
+  const savedText = {
+    fr: "Votre dossier et documents signés ont bien été enregistrés.",
+    en: "Your file and signed documents have been successfully saved.",
+    sq: "Dosja juaj dhe dokumentet e nënshkruara janë ruajtur me sukses.",
+    ar: "تم حفظ ملفك والمستندات الموقعة بنجاح.",
+    ru: "Ваш файл и подписанные документы были успешно сохранены.",
+    ka: "თქვენი ფაილი და ხელმოწერილი დოკუმენტები წარმატებით შეინახა.",
+    ps: "ستاسو فایل او لاسلیک شوي اسناد په بریالیتوب سره خوندي شوي.",
+    it: "Il tuo file e i documenti firmati sono stati salvati con successo.",
+    es: "Su archivo y documentos firmados se han guardado correctamente."
+  };
+  filesSaved.textContent = savedText[currentLang] || savedText.fr;
+}
+
+const wifiCodeElement = document.querySelector('.form-step[data-step="10"] .bg-green-100 strong');
+if (wifiCodeElement) {
+  const wifiCodeText = {
+    fr: "Code WiFi :",
+    en: "WiFi code:",
+    sq: "Kodi WiFi:",
+    ar: "رمز الواي فاي:",
+    ru: "Код WiFi:",
+    ka: "WiFi კოდი:",
+    ps: "د وایفای کوډ:",
+    it: "Codice WiFi:",
+    es: "Código WiFi:"
+  };
+  
+  const wifiCode = document.getElementById('wifiCode').textContent;
+  wifiCodeElement.innerHTML = `${wifiCodeText[currentLang] || wifiCodeText.fr} <span class="font-mono" id="wifiCode">${wifiCode}</span>`;
+}
+
+const wifiHelp = document.querySelector('.form-step[data-step="10"] p:last-of-type');
+if (wifiHelp) {
+  const helpText = {
+    fr: "Prenez soin de ce code et n'hésitez pas à contacter le personnel pour toute question complémentaire.",
+    en: "Take care of this code and don't hesitate to contact staff for any additional questions.",
+    sq: "Kujdesuni për këtë kod dhe mos hezitoni të kontaktoni stafin për çdo pyetje shtesë.",
+    ar: "احتفظ بهذا الرمز ولا تتردد في الاتصال بالموظفين لأي أسئلة إضافية.",
+    ru: "Берегите этот код и не стесняйтесь обращаться к персоналу с любыми дополнительными вопросами.",
+    ka: "გაუფრთხილდით ამ კოდს და ნუ მოგერიდებათ დაუკავშირდეთ პერსონალს ნებისმიერი დამატებითი კითხვებისთვის.",
+    ps: "د دې کوډ پاملرنه وکړئ او د کوم اضافي پوښتنو لپاره د کارکوونکو سره اړیکه نیولو څخه مه ډډه کوئ.",
+    it: "Prenditi cura di questo codice e non esitare a contattare il personale per qualsiasi domanda aggiuntiva.",
+    es: "Cuide este código y no dude en contactar al personal para cualquier pregunta adicional."
+  };
+  wifiHelp.textContent = helpText[currentLang] || helpText.fr;
+}
+
+const newRegBtn = document.querySelector('.form-step[data-step="10"] button');
+if (newRegBtn) {
+  const newRegText = {
+    fr: "Nouvel enregistrement",
+    en: "New registration",
+    sq: "Regjistrim i ri",
+    ar: "تسجيل جديد",
+    ru: "Новая регистрация",
+    ka: "ახალი რეგისტრაცია",
+    ps: "نوی راجسټریشن",
+    it: "Nuova registrazione",
+    es: "Nuevo registro"
+  };
+  newRegBtn.textContent = newRegText[currentLang] || newRegText.fr;
+}
+    // Continuer avec les autres étapes...
+    // Étape 4 - Règlement
+    // Étape 5 - Quiz
+    // Étape 6 - Signature
+    // Étape 7 - Bagages
+    // Étape 8 - Rappel
+    // Étape 9 - Contrat
+    // Étape 10 - Fin
+    
+    // Adapté à votre code, mais il faudrait continuer avec toutes les sections
+    
+  } catch (error) {
+    console.error("Erreur lors de la traduction de l'interface:", error);
+  }
+}
+
+// FONCTIONS DE NAVIGATION - DÉFINIES GLOBALEMENT
+function nextStep() {
+  const steps = document.querySelectorAll('.form-step');
+  let current = -1;
+  
+  // Trouver manuellement l'étape active
+  for (let i = 0; i < steps.length; i++) {
+    if (steps[i].classList.contains('active')) {
+      current = i;
+      break;
+    }
+  }
+  
+  if (current < steps.length - 1) {
+    console.log(`Passage de l'étape ${current+1} à ${current+2}`);
+    steps[current].classList.remove('active');
+    steps[current+1].classList.add('active');
+    window.scrollTo(0,0);
+    
+    // Actions spécifiques pour certaines étapes
+    if (current + 1 === 8) { // Étape 9 (index 8)
+      loadContractPdf();
+    }
+  } else {
+    console.log("Déjà à la dernière étape");
+  }
+}
+  
+
+function prevStep() {
+  const steps = document.querySelectorAll('.form-step');
+  let current = -1;
+  
+  // Trouver manuellement l'étape active
+  for (let i = 0; i < steps.length; i++) {
+    if (steps[i].classList.contains('active')) {
+      current = i;
+      break;
+    }
+  }
+  
+  if (current > 0) {
+    console.log(`Passage de l'étape ${current+1} à ${current}`);
+    steps[current].classList.remove('active');
+    steps[current-1].classList.add('active');
+    window.scrollTo(0,0);
+  } else {
+    console.log("Déjà à la première étape");
+  }
+}
+
+function forceNextStep() {
+  const familySelect = document.getElementById('familySelect');
+  const famIdx = familySelect.value;
+  
+  if (!famIdx) {
+    alert("Veuillez sélectionner une famille");
+    return;
+  }
+  
+  // Valider le numéro de téléphone
+  if (window.phoneInputInstance && !window.validatePhone(window.phoneInputInstance)) {
+    return; // Arrêter si le numéro n'est pas valide
+  }
+  
+  // Vérifier la présence des personnes
+  const presenceYes = document.getElementById('presenceYes');
+  const presenceNo = document.getElementById('presenceNo');
+  
+  if (!presenceYes.checked && !presenceNo.checked) {
+    alert("Veuillez confirmer le nombre de personnes présentes");
+    return;
+  }
+  
+  if (presenceNo.checked) {
+    document.getElementById('presenceWarning').classList.remove('hidden');
+    return; // Ne pas continuer tant que l'administrateur n'a pas résolu le problème
+  }
+  
+  // Si tout est OK, continuer
+  const fam = gFamilies[famIdx];
+  document.getElementById('familyDetails').textContent = 
+    "Famille/groupe : " + (fam.nom || fam.name) + " | Nombre attendu : " + (fam.menage || fam.count) + " personnes";
+  
+  // Stocker le nombre de personnes présentes pour utilisation ultérieure
+  const expectedPersonCount = fam.menage || fam.nombre || fam.count || 0;
+  
+  nextStep();
+}
+
+function validateRulesStep() {
+  if (!document.getElementById('readRules').checked) {
+    document.getElementById('rulesError').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('rulesError').classList.add('hidden');
+  nextStep();
+}
+
+function validateQuizStep() {
+  const q1 = document.getElementById('q1').value.toLowerCase();
+  const q2 = document.getElementById('q2').value.toLowerCase();
+  const q3 = document.getElementById('q3').value.toLowerCase();
+  
+  // Valider selon la langue actuelle
+  let isCorrect = false;
+  
+  // Équivalents de "non" dans différentes langues
+  const noAnswers = {
+    fr: "non",
+    en: "no",
+    sq: "jo",
+    ar: "لا",
+    ru: "нет",
+    ka: "არა",
+    ps: "نه",
+    it: "no",
+    es: "no"
+  };
+  
+  // Équivalents de "oui" dans différentes langues
+  const yesAnswers = {
+    fr: "oui",
+    en: "yes",
+    sq: "po",
+    ar: "نعم",
+    ru: "да",
+    ka: "დიახ",
+    ps: "هو",
+    it: "sì",
+    es: "sí"
+  };
+  
+  const currentNoAnswer = noAnswers[currentLang] || noAnswers.fr;
+  const currentYesAnswer = yesAnswers[currentLang] || yesAnswers.fr;
+  
+  // Les réponses correctes sont : non, non, oui (pour les questions 1, 2 et 3)
+  isCorrect = (q1 === currentNoAnswer && q2 === currentNoAnswer && q3 === currentYesAnswer);
+  
+  if (!isCorrect) {
+    document.getElementById('quizError').classList.remove('hidden');
+    return;
+  }
+  
+  document.getElementById('quizError').classList.add('hidden');
+  nextStep();
+}
+
+function validateSignatureStep() {
+  if (!signatureExists('signaturePad')) {
+    document.getElementById('signatureError').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('signatureError').classList.add('hidden');
+  nextStep();
+}
+
+function validateAffairesStep() {
+  if (!document.getElementById('affairesConfirmation').checked) {
+    document.getElementById('affaireError').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('affaireError').classList.add('hidden');
+  nextStep();
+}
+
+function validateContractStep() {
+  if (!signatureExists('signaturePad2')) {
+    document.getElementById('signature2Error').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('signature2Error').classList.add('hidden');
+  
+  // Désactiver le bouton pendant le traitement
+  const continueBtn = document.getElementById('continueBtn');
+  if (continueBtn) {
+    continueBtn.disabled = true;
+    continueBtn.textContent = "Traitement en cours...";
+  }
+
+  try {
+    // Enregistrer dans Firebase
+    saveCompletedRegistration();
+    // nextStep() est appelé dans saveCompletedRegistration après succès
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement :", error);
+    alert("Une erreur est survenue : " + error.message);
+    
+    // Réactiver le bouton en cas d'erreur
+    if (continueBtn) {
+      continueBtn.disabled = false;
+      continueBtn.textContent = "Continuer";
+    }
+  }
+}
+
+// FONCTIONS D'ADMINISTRATION - DÉFINIES GLOBALEMENT
+function openAdminPanel() {
+  document.getElementById('adminOverlay').classList.remove('hidden');
+  renderDashboard();
+  showTab(0);
+  setTimeout(() => {
+    document.querySelector('.tab-button').focus();
+  }, 150);
+}
+
+function closeAdminPanel() {
+  document.getElementById('adminOverlay').classList.add('hidden');
+}
+
+function showTab(idx) {
+  let tabs = document.querySelectorAll('.tab-content');
+  let btns = document.querySelectorAll('.tab-button');
+  tabs.forEach((t, i) => { t.classList.toggle('active', i===idx); });
+  btns.forEach((b, i) => { b.classList.toggle('active', i===idx); });
+}
+
+
+
+function saveContract() {
+  gContractTemplate = document.getElementById('contractAdmin').value;
+  localStorage.setItem('contractText', gContractTemplate);
+  fillContractPreview();
+  alert("Modèle de contrat enregistré.");
+}
+
+function saveWifiCode() {
+  const val = document.getElementById('wifiCodeAdmin').value;
+  if (val) {
+    gWifiCode = val;
+    localStorage.setItem('wifiCode', gWifiCode);
+    document.getElementById('wifiCode').textContent = gWifiCode;
+    alert("Code Wifi sauvegardé.");
+  }
+}
+
+function logoutAdmin() { 
+  closeAdminPanel(); 
+}
+
+// FONCTIONS DE SIGNATURE ET D'INTERFACE
+function clearSignature() {
+  let canvas = document.getElementById('signaturePad');
+  let ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function clearSignature2() {
+  let canvas = document.getElementById('signaturePad2');
+  let ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function signatureExists(canvasId) {
+  let canvas = document.getElementById(canvasId);
+  let ctx = canvas.getContext('2d');
+  let imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+  return imgData.data.some(channel => channel !== 0);
+}
+
+function handlePdfUpload(e) {
+  e.preventDefault();
+  var input = document.getElementById('pdfInput');
+  var status = document.getElementById('pdfUploadStatus');
+  if (!input.files[0]) {
+    status.textContent = "Veuillez sélectionner un fichier PDF.";
+    return;
+  }
+  status.textContent = "Téléversement...";
+  var file = input.files[0];
+  var pdfRef = storage.ref().child('contracts/templates/model.pdf');
+  pdfRef.put(file).then(function(snapshot) {
+    status.textContent = "PDF téléversé avec succès.";
+    showCurrentPdfInfo();
+  }).catch(function(error) {
+    status.textContent = "Erreur : " + error;
+  });
+}
+  // Vérification de la connexion à Firebase
+function checkFirebaseConnection() {
+  // Nécessite d'ajouter la dépendance firebase-database --> affichage rouge et vert
+  if (firebase.database) {
+    const connectedRef = firebase.database().ref('.info/connected');
+    connectedRef.on('value', (snap) => {
+      const statusEl = document.getElementById('connectionStatus');
+      if (snap.val() === true) {
+        console.log('Connecté à Firebase');
+        if (statusEl) {
+          statusEl.classList.remove('bg-red-500');
+          statusEl.classList.add('bg-green-500');
+        }
+      } else {
+        console.log('Non connecté à Firebase');
+        if (statusEl) {
+          statusEl.classList.remove('bg-green-500');
+          statusEl.classList.add('bg-red-500');
+        }
+      }
+    });
+  } else {
+    console.warn("Firebase Realtime Database n'est pas chargé, impossible de vérifier la connexion");
+  }
+}
+
+// Test de connexion à Firebase Storage
+function testFirebaseStorage() {
+  console.log("Test de connexion à Firebase Storage...");
+  
+  // Référence à un fichier dans Storage
+  const testRef = storage.ref().child('test-connection.txt');
+  
+  // Créer un petit fichier texte
+  const blob = new Blob(['Test de connexion: ' + new Date().toISOString()], { type: 'text/plain' });
+  
+  // Tenter de téléverser
+  testRef.put(blob)
+    .then(snapshot => {
+      console.log("✅ Connexion à Firebase Storage réussie!");
+      console.log("Fichier téléversé:", snapshot.ref.fullPath);
+      document.getElementById('connectionStatus').classList.add('bg-green-500');
+      document.getElementById('connectionStatus').classList.remove('bg-red-500');
+      
+      // Supprimer le fichier de test après confirmation de connexion
+      return testRef.delete();
+    })
+    .then(() => {
+      console.log("Fichier de test supprimé");
+    })
+    .catch(error => {
+      console.error("❌ Erreur de connexion à Firebase Storage:", error);
+      document.getElementById('connectionStatus').classList.add('bg-red-500');
+      document.getElementById('connectionStatus').classList.remove('bg-green-500');
+      alert("Impossible de se connecter à Firebase Storage: " + error.message);
+    });
+}
+
+// Affichage des options de famille
+function displayFamilyOptions() {
+  // Récupérer l'élément select
+  const select = document.getElementById('familySelect');
+  if (!select) return; // Sortir de la fonction si l'élément n'existe pas
+  
+  // Vider le contenu actuel
+  select.innerHTML = '';
+  
+  // Remplir avec les nouvelles options
+  if (gFamilies.length === 0) {
+    select.innerHTML = '<option value="">(Aucune famille importée)</option>';
+  } else {
+    select.innerHTML += '<option value="">Sélectionner une famille</option>';
+    gFamilies.forEach((fam, idx) => {
+      let nom = fam.nom || fam.name || "";
+      let nb = fam.menage || fam.nombre || fam.count || "";
+      select.innerHTML += `<option value="${idx}">${nom ? nom : '(Anonyme)'} — ${nb ? nb+'p' : ''}</option>`;
+    });
+  }
+  
+  // PARTIE AJOUTÉE: Déclencher l'événement change si une valeur est déjà sélectionnée
+  // Cela mettra à jour automatiquement l'affichage du nombre de personnes attendu
+  if (select.value) {
+    // Créer et déclencher un événement de changement
+    const event = new Event('change');
+    select.dispatchEvent(event);
+  } else {
+    // Si aucune famille n'est sélectionnée, assurez-vous que l'affichage est vide
+    const countDisplay = document.getElementById('expectedPersonCount');
+    if (countDisplay) {
+      countDisplay.textContent = "X"; // Valeur par défaut quand aucune famille n'est sélectionnée
+    }
+    
+    // Réinitialiser les boutons radio si présents
+    const presenceYes = document.getElementById('presenceYes');
+    const presenceNo = document.getElementById('presenceNo');
+    if (presenceYes) presenceYes.checked = false;
+    if (presenceNo) presenceNo.checked = false;
+    
+    // Cacher le message d'avertissement
+    const warning = document.getElementById('presenceWarning');
+    if (warning) warning.classList.add('hidden');
+  }
+}
+
+// Fonctions pour le pad de signature
+function signaturePadAddListeners(canvas, clear=false) {
+  let ctx = canvas.getContext('2d');
+  ctx.lineWidth = 2.25;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  let drawing=false, last={};
+  
+  function pointFromEvent(e){
+    if (e.touches && e.touches.length > 0) {
+      let rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.touches[0].clientX - rect.left) * (canvas.width/rect.width),
+        y: (e.touches[0].clientY - rect.top) * (canvas.height/rect.height)
+      };
+    } else if (e.changedTouches && e.changedTouches.length > 0){
+      let rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.changedTouches[0].clientX - rect.left) * (canvas.width/rect.width),
+        y: (e.changedTouches[0].clientY - rect.top) * (canvas.height/rect.height)
+      };
+    } else if (typeof e.offsetX !== 'undefined') {
+      return {x: e.offsetX, y: e.offsetY };
+    }
+    return {x:0,y:0};
+  }
+  
+  canvas.addEventListener('touchstart', function(e){
+    drawing = true;
+    last = pointFromEvent(e);
+    e.preventDefault();
+  }, {passive:false});
+  
+  canvas.addEventListener('touchend', function(e){
+    drawing = false;
+    e.preventDefault();
+  }, {passive:false});
+  
+  canvas.addEventListener('touchmove', function(e){
+    if (!drawing) return;
+    const pt = pointFromEvent(e);
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(pt.x, pt.y);
+    ctx.stroke();
+    last = pt;
+    e.preventDefault();
+  }, {passive:false});
+  
+  canvas.addEventListener('mousedown', function(e){
+    drawing = true;
+    last = pointFromEvent(e);
+  });
+  
+  canvas.addEventListener('mouseup', function(){ drawing=false; });
+  canvas.addEventListener('mouseout', function(){ drawing=false; });
+  
+  canvas.addEventListener('mousemove', function(e){
+    if (!drawing) return;
+    const pt = pointFromEvent(e);
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(pt.x, pt.y);
+    ctx.stroke();
+    last = pt;
+  });
+  
+  if(clear){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+}
+
+// Initialiser les pads de signature
+function initSignaturePads() {
+  let canvas = document.getElementById('signaturePad');
+  if(canvas){ signaturePadAddListeners(canvas,true); }
+  let canvas2 = document.getElementById('signaturePad2');
+  if(canvas2){ signaturePadAddListeners(canvas2,true); }
+}
+
+// Afficher les informations sur le PDF actuel
+function showCurrentPdfInfo() {
+  var infoDiv = document.getElementById('currentPdfInfo');
+  var pdfRef = storage.ref().child('contracts/templates/model.pdf');
+  pdfRef.getMetadata().then(function(meta) {
+    const updated = meta.updated ? new Date(meta.updated).toLocaleString() : "Inconnu";
+    infoDiv.innerHTML = "model.pdf — <strong>Téléversé le : </strong> " + updated + "<br><a href='" + meta.downloadURLs?.[0] + "' target='_blank' class='text-blue-800 underline'>Télécharger</a>";
+  }).catch(function() {
+    infoDiv.textContent = "Aucun fichier PDF téléversé pour l'instant.";
+  });
+}
+  // Fonction pour initialiser la visualisation du PDF
+function initPdfViewer() {
+  // Définir le worker pour PDF.js
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@2.12.313/build/pdf.worker.min.js';
+  }
+}
+
+// Fonction pour charger et afficher le contrat PDF
+async function loadContractPdf() {
+  const pdfContainer = document.getElementById('pdfViewer');
+  const loadingElement = document.getElementById('pdfLoading');
+  
+  if (loadingElement) {
+    loadingElement.style.display = "block";
+  }
+  
+  pdfContainer.innerHTML = ''; // Vide l'ancien contenu
+
+  try {
+    // URL du PDF sur Firebase
+    const pdfUrl = await storage.ref().child('contracts/templates/model.pdf').getDownloadURL();
+    console.log("PDF URL:", pdfUrl);
+
+    // Charge le PDF avec PDF.js
+    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    const pdf = await loadingTask.promise;
+
+    // Affiche chaque page dans le conteneur
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 1.2 });
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      pdfContainer.appendChild(canvas);
+      await page.render({ canvasContext: context, viewport: viewport }).promise;
+    }
+
+    if (loadingElement) {
+      loadingElement.style.display = "none";
+    }
+  } catch (err) {
+    console.error("Erreur lors du chargement du PDF:", err);
+    pdfContainer.innerHTML = `<div class="text-red-500">Erreur de chargement du contrat : ${err.message}</div>`;
+  }
+}
+
+// Télécharger le modèle PDF
+async function downloadModelPdf() {
+  try {
+    const modelPdfUrl = await storage.ref('contracts/templates/model.pdf').getDownloadURL();
+    console.log("URL du modèle récupérée :", modelPdfUrl);
+
+    const response = await fetch(modelPdfUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    console.log("Fichier modèle téléchargé en arrayBuffer");
+
+    return arrayBuffer;
+  } catch (error) {
+    console.error("Erreur lors du téléchargement du modèle PDF :", error);
+    throw error;
+  }
+}
+// Remplir un PDF avec des champs de formulaire
+async function fillContractPdf(formPdfBytes, formData) {
+  try {
+    // Charger le PDF
+    const pdfDoc = await PDFLib.PDFDocument.load(formPdfBytes);
+    
+    // Obtenir la liste des champs de formulaire
+    const form = pdfDoc.getForm();
+    
+    // Log les noms des champs disponibles pour le débogage
+    console.log("Champs de formulaire disponibles:", form.getFields().map(f => f.getName()));
+    
+    // Remplir chaque champ avec les données correspondantes
+    try {
+      // Vérifier si chaque champ existe avant d'essayer de le remplir
+      if (form.getField('nom_chef_famille')) 
+  form.getTextField('nom_chef_famille').setText(String(formData.nom_chef_famille || ""));
+
+if (form.getField('date_naissance'))
+  form.getTextField('date_naissance').setText(String(formData.date_naissance || ""));
+
+if (form.getField('nombre_personnes'))
+  form.getTextField('nombre_personnes').setText(String(formData.nombre_personnes || ""));
+
+if (form.getField('date_jour'))
+  form.getTextField('date_jour').setText(String(formData.date_jour || ""));
+      
+      if (form.getField('date_jour'))
+        form.getTextField('date_jour').setText(String(formData.date_jour || ""));
+      
+      // Aplatir le formulaire pour qu'il ne soit plus modifiable
+      form.flatten();
+    } catch (fieldError) {
+      console.error("Erreur lors du remplissage des champs:", fieldError);
+      // Continue même en cas d'erreur sur un champ spécifique
+    }
+    
+    // Sauvegarder le PDF
+    const filledPdfBytes = await pdfDoc.save();
+    console.log("PDF avec formulaire rempli avec succès");
+    return filledPdfBytes;
+    
+  } catch (error) {
+    console.error("Erreur lors du remplissage du PDF avec formulaire:", error);
+    throw error;
+  }
+}
+
+async function insertSignatureIntoPdf(pdfBytes, signatureUrl) {
+  try {
+    // 1. Charger le PDF existant
+    const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+
+    // 2. Télécharger l'image de la signature
+    let signatureImageBytes;
+    if (signatureUrl.startsWith('data:')) {
+      signatureImageBytes = await fetch(signatureUrl).then(res => res.arrayBuffer());
+    } else {
+      signatureImageBytes = await fetch(signatureUrl).then(res => res.arrayBuffer());
+    }
+
+    // 3. Intégrer l'image dans le PDF
+    const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
+
+    // 4. Récupérer toutes les pages pour trouver le champ signature
+    const pages = pdfDoc.getPages();
+    const form = pdfDoc.getForm();
+    
+    // Lister tous les champs pour débogage
+    const fields = form.getFields();
+    console.log("Tous les champs de formulaire dans le PDF:", fields.map(f => f.getName()));
+    
+    let signatureFound = false;
+    
+    // Essayer différentes versions du nom du champ (signature, Signature, SIGNATURE)
+    const possibleFieldNames = ['signature', 'Signature', 'SIGNATURE'];
+    
+    for (const fieldName of possibleFieldNames) {
+      try {
+        const field = form.getField(fieldName);
+        if (field) {
+          console.log(`Champ '${fieldName}' trouvé!`);
+          const widgets = field.acroField.getWidgets();
+          
+          // Log complet du widget pour analyse
+          console.log("Widget du champ signature:", JSON.stringify(widgets[0], null, 2));
+          
+          if (widgets.length > 0) {
+            // Récupérer le numéro de page et le rectangle
+            const pageIndex = widgets[0].P().objectNumber;
+            console.log("Numéro de page du champ:", pageIndex);
+            
+            const rect = widgets[0].getRectangle();
+            console.log("Rectangle du champ:", rect);
+            
+            // Trouver la bonne page (peut être différente de la dernière)
+            let targetPage = null;
+            for (let i = 0; i < pages.length; i++) {
+              const page = pages[i];
+              // Méthode alternative pour comparer les pages
+              if (i === pageIndex - 1) { // Souvent, pageIndex est 1-based
+                targetPage = page;
+                console.log(`Champ trouvé sur la page ${i+1}`);
+                break;
+              }
+            }
+            
+            // Utiliser la dernière page si nous n'avons pas trouvé la bonne
+            if (!targetPage) {
+              console.log("Page spécifique non trouvée, utilisation de la dernière page");
+              targetPage = pages[pages.length - 1];
+            }
+            
+            // Obtenir les dimensions de la page
+            const { width: pageWidth, height: pageHeight } = targetPage.getSize();
+            console.log(`Dimensions de la page: ${pageWidth}x${pageHeight}`);
+            
+            // Calculer les coordonnées (L'origine dans PDF est en bas à gauche)
+            let x = rect.x;
+            let y = rect.y; 
+            let width = rect.width;
+            let height = rect.height;
+            
+            // Dessiner l'image sur l'emplacement exact du champ
+            console.log(`Dessin de l'image à x=${x}, y=${y}, width=${width}, height=${height}`);
+            targetPage.drawImage(signatureImage, {
+              x,
+              y,
+              width,
+              height
+            });
+            
+            // Indiquer que nous avons trouvé et traité le champ
+            signatureFound = true;
+            break;
+          }
+        }
+      } catch (e) {
+        console.log(`Erreur lors de la recherche du champ '${fieldName}':`, e);
+      }
+    }
+    
+    // Si nous n'avons pas trouvé le champ, placer la signature sur la dernière page à une position par défaut
+    if (!signatureFound) {
+      console.log("Aucun champ de signature trouvé, placement par défaut");
+      const lastPage = pages[pages.length - 1];
+      const { width: pageWidth, height: pageHeight } = lastPage.getSize();
+      
+      // Dimensions adaptées à une signature
+      const sigWidth = 200;
+      const sigHeight = sigWidth * (signatureImage.height / signatureImage.width);
+      
+      // Position en bas à droite
+      const x = pageWidth - sigWidth - 50;  // 50 unités depuis le bord droit
+      const y = 230;  // 100 unités depuis le bas
+      
+      console.log(`Placement par défaut: x=${x}, y=${y}, width=${sigWidth}, height=${sigHeight}`);
+      lastPage.drawImage(signatureImage, {
+        x,
+        y,
+        width: sigWidth,
+        height: sigHeight
+      });
+    }
+
+    // 5. Sauvegarder le PDF
+    const finalPdfBytes = await pdfDoc.save();
+    console.log("Traitement du PDF terminé!");
+    return finalPdfBytes;
+
+  } catch (error) {
+    console.error("Erreur lors de l'insertion de la signature :", error);
+    throw error;
+  }
+}
+// Uploader le PDF signé
+async function uploadSignedPdf(signedPdfBytes, fileName) {
+  try {
+    // 1. Créer une référence vers le dossier 'signed'
+    const signedRef = storage.ref().child(`signed/${fileName}`);
+
+    // 2. Créer un Blob à partir des bytes
+    const blob = new Blob([signedPdfBytes], { type: 'application/pdf' });
+
+    // 3. Uploader le fichier
+    await signedRef.put(blob);
+
+    console.log("PDF signé uploadé avec succès !");
+  } catch (error) {
+    console.error("Erreur lors de l'upload du PDF signé :", error);
+    throw error;
+  }
+}
+
+// Fonction pour remplir l'aperçu du contrat
+function fillContractPreview() {
+  const famIdx = document.getElementById('familySelect') ? document.getElementById('familySelect').value : 0;
+  let nom = "", naissance = "", nombre = "";
+  if (gFamilies && gFamilies[famIdx]) {
+    nom = gFamilies[famIdx].nom || gFamilies[famIdx].name || "";
+    naissance = gFamilies[famIdx].naissance || gFamilies[famIdx].birth || "";
+    nombre = gFamilies[famIdx].menage || gFamilies[famIdx].nombre || gFamilies[famIdx].count || "";
+  }
+  
+  // Si nous sommes à l'étape 9, ne rien faire car le PDF sera chargé par executeOnStep
+  const steps = document.querySelectorAll('.form-step');
+  let current = Array.from(steps).findIndex(s => s.classList.contains('active'));
+  if (current === 8) { // Étape 9 (index 8)
+    // Le PDF sera chargé par executeOnStep
+    return;
+  }
+  
+  // Pour les autres étapes, mettre à jour le contrat texte si l'élément existe
+  let contractEl = document.getElementById('contractPreview');
+  if (contractEl) {
+    let today = (new Date()).toLocaleDateString(currentLang === 'fr' ? "fr-CA" : "en-GB");
+let contractTemplate = gContractTemplate[currentLang] || gContractTemplate.fr;
+    let contract = contractTemplate
+      .replaceAll('{nom_chef_famille}', nom)
+      .replaceAll('{date_naissance}', naissance)
+      .replaceAll('{nombre_personnes}', nombre)
+      .replaceAll('{date_jour}', today);
+    contractEl.textContent = contract;
+  }
+}
+
+// Fonction pour enregistrer l'inscription complète et sauvegarder dans Firebase
+function saveCompletedRegistration() {
+  // Récupérer les données du formulaire
+  const familyIdx = document.getElementById('familySelect').value;
+  const family = gFamilies[familyIdx];
+ const presentCount = family.menage || family.nombre || family.count || 0;
+
+  // Récupérer le numéro de téléphone formaté avec le code pays
+let mobileNumber = document.getElementById('mobileInput').value;
+if (window.phoneInputInstance && mobileNumber.trim() !== '' && mobileNumber.toLowerCase() !== 'néant') {
+  // Récupérer le numéro au format E.164 (+33612345678)
+  mobileNumber = window.phoneInputInstance.getNumber();
+}
+
+  const email = document.getElementById('emailInput').value;
+  const baggageCount = document.getElementById('baggageCount').value;
+  
+  // Récupérer les signatures (en base64)
+  const signatureCanvas1 = document.getElementById('signaturePad');
+  const signatureCanvas2 = document.getElementById('signaturePad2');
+  const signature1 = signatureCanvas1.toDataURL('image/png');
+  const signature2 = signatureCanvas2.toDataURL('image/png');
+  
+  // Créer l'objet de données
+  const registrationData = {
+    familyId: family.id || 'unknown',
+    familyName: family.nom || family.name || 'Anonymous',
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    presentCount: parseInt(presentCount) || 0,
+    contactInfo: {
+      mobile: mobileNumber || 'Non fourni',
+      email: email || 'Non fourni'
+    },
+    baggageCount: parseInt(baggageCount) || 0,
+    completed: true
+  };
+  
+  let registrationId;
+  
+  // Enregistrer dans Firestore
+  return db.collection('registrations').add(registrationData)
+    .then(docRef => {
+      console.log("Enregistrement sauvegardé avec ID:", docRef.id);
+      registrationId = docRef.id;
+      
+      // Sauvegarder les signatures dans Storage
+      const signaturesRef = storage.ref().child('signatures/' + docRef.id);
+      
+      // Upload des signatures en parallèle
+      return Promise.all([
+        signaturesRef.child('reglement.png').putString(signature1, 'data_url'),
+        signaturesRef.child('contrat.png').putString(signature2, 'data_url')
+      ]);
+    })
+    .then(() => {
+      console.log("Signatures sauvegardées avec succès");
+      
+      // Télécharger le modèle PDF
+      return downloadModelPdf();
+    })
+    .then(pdfBytes => {
+      console.log("Modèle PDF téléchargé, préparation des données");
+      
+// Dans la fonction saveCompletedRegistration, modifiez la partie qui prépare formData:
+// Préparer les données pour remplir le PDF
+const formData = {
+  nom_chef_famille: String(family.nom || family.name || ""),
+  date_naissance: String(family.naissance || family.birth || ""),
+  nombre_personnes: String(family.menage || family.nombre || family.count || ""),
+  date_jour: new Date().toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-GB')
+};
+      
+      // Remplir le PDF avec les données
+      return fillContractPdf(pdfBytes, formData);
+    })
+    .then(filledPdfBytes => {
+      console.log("PDF rempli avec les données, ajout de la signature");
+      
+      // Insérer la signature dans le PDF
+      return insertSignatureIntoPdf(filledPdfBytes, signature2);
+    })
+  .then(signedPdfBytes => {
+  console.log("Signature ajoutée au PDF, sauvegarde du document final");
+  
+  // Récupérer le nom du chef de famille et la date pour le nom de fichier standardisé
+  const nomChefFamille = String(family.nom || family.name || "Anonyme").replace(/[^a-zA-Z0-9]/g, "_");
+  const dateJour = new Date().toLocaleDateString('fr-FR').replace(/\//g, "-");
+  
+  // Format standardisé: "Contrat tripartite nom_chef_famille, date_jour"
+  const fileName = `Contrat_tripartite_${nomChefFamille}_${dateJour}.pdf`;
+  
+  // Sauvegarder le PDF complet dans Firebase Storage
+  return uploadSignedPdf(signedPdfBytes, fileName);
+})
+    .then(() => {
+      console.log("PDF signé et sauvegardé avec succès");
+      
+      // Ajouter à la liste locale
+      gSignedEntries.push(Date.now());
+      saveAdmin();
+      
+      // Continuer à la dernière étape
+      nextStep();
+    })
+    .catch(error => {
+      console.error("Erreur lors de l'enregistrement:", error);
+      alert("Une erreur est survenue lors de l'enregistrement: " + error.message);
+      throw error;
+    });
+}
+
+// Mettre en cache localement les données des familles
+function cacheFamiliesLocally() {
+  if (gFamilies && gFamilies.length > 0) {
+    localStorage.setItem('cachedFamilies', JSON.stringify(gFamilies));
+    localStorage.setItem('familiesLastUpdated', new Date().toISOString());
+    console.log("Données des familles mises en cache localement");
+  }
+}
+
+// Charger les paramètres sauvegardés
+function loadAdminSaved() {
+  gContractTemplate = localStorage.getItem('contractText') || gContractTemplate;
+  if(document.getElementById('contractAdmin')) document.getElementById('contractAdmin').value = gContractTemplate;
+
+  let ses = localStorage.getItem('signedEntries');
+  if(ses) try{gSignedEntries=JSON.parse(ses);}catch(e){}
+  let wfc = localStorage.getItem('wifiCode');
+  if(wfc) gWifiCode = wfc;
+  
+  // Aussi mettre à jour le champ admin
+  if(document.getElementById('wifiCodeAdmin')) {
+    document.getElementById('wifiCodeAdmin').value = gWifiCode;
+  }
+}
+
+// Sauvegarder les paramètres d'administration
+function saveAdmin() {
+  localStorage.setItem('signedEntries', JSON.stringify(gSignedEntries));
+}
+
+// Afficher les familles dans le panneau d'administration
+function displayFamiliesAdmin() {
+  const table = document.getElementById('familiesAdminTable');
+  if (!table) return;
+  
+  table.innerHTML = '';
+  gFamilies.forEach(fam => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="p-2 border">${fam.nom || fam.name || '-'}</td>
+      <td class="p-2 border">${fam.naissance || fam.birth || '-'}</td>
+      <td class="p-2 border">${fam.menage || fam.nombre || fam.count || '-'}</td>
+    `;
+    table.appendChild(row);
+  });
+}
+
+// Rendre le tableau de bord
+function renderDashboard() {
+  let ctx = document.getElementById('statChart')?.getContext('2d');
+  if (!ctx) return;
+  
+  let signed = gSignedEntries.length;
+  let familles = gFamilies.length;
+  
+  if (document.getElementById('statTotalFamilles')) {
+    document.getElementById('statTotalFamilles').textContent = familles;
+  }
+  
+  if (document.getElementById('statTotalEnreg')) {
+    document.getElementById('statTotalEnreg').textContent = signed;
+  }
+  
+  if (window._chartjs_) window._chartjs_.destroy();
+  window._chartjs_ = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Familles', 'Enregistrements'],
+      datasets: [{
+        label: 'Total',
+        data: [familles, signed],
+        backgroundColor: ['#2563eb', '#059669'],
+      }]
+    },
+    options: {
+      responsive: false,
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+// Synchronisation en temps réel avec Firebase
+function setupRealtimeSync() {
+  const familiesRef = db.collection("families");
+  
+  // Ajoutez un message de chargement
+  const familySelect = document.getElementById('familySelect');
+  if (familySelect) familySelect.innerHTML = '<option value="">Chargement des données...</option>';
+  
+  // Écouteur en temps réel avec gestion d'erreurs améliorée
+  return familiesRef.onSnapshot((snapshot) => {
+    const families = [];
+    snapshot.forEach((doc) => {
+      // Ajouter l'ID du document pour référence future
+      families.push({ id: doc.id, ...doc.data() });
+    });
+    gFamilies = families;
+    
+    // Mettre à jour l'interface
+    displayFamiliesAdmin();
+    displayFamilyOptions();
+    if (typeof renderDashboard === 'function') renderDashboard();
+    
+    // Mettre en cache localement
+    cacheFamiliesLocally();
+    
+    console.log("Données Firebase chargées avec succès:", families.length, "familles");
+  }, (error) => {
+    console.error("Erreur de connexion Firebase:", error);
+    alert("Impossible de charger les données: " + error.message);
+    
+    // En cas d'erreur, restaurer depuis le stockage local si disponible
+    const cachedFamilies = localStorage.getItem('cachedFamilies');
+    if (cachedFamilies) {
+      try {
+        gFamilies = JSON.parse(cachedFamilies);
+        displayFamiliesAdmin();
+        displayFamilyOptions();
+        console.log("Données restaurées depuis le cache local");
+      } catch (e) {
+        console.error("Erreur lors de la restauration du cache:", e);
+      }
+    }
+  });
+}
+  // Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialiser la connexion Firebase et charger les données
+  setupRealtimeSync();
+// Initialiser la sélection de langue
+setupLanguageSelector();
+translateUI();
+  
+  // Préparer le formulaire
+  displayFamilyOptions();
+  fillContractPreview();
+  initSignaturePads();
+  
+  // Charger les paramètres sauvegardés
+  document.getElementById('wifiCode').textContent = gWifiCode;
+  loadAdminSaved();
+  
+  // Afficher les informations sur le PDF
+  showCurrentPdfInfo();
+  
+  // Initialiser le viewer PDF
+  initPdfViewer();
+  // Initialiser le champ téléphone international
+  const phoneInput = document.getElementById('mobileInput');
+  if (phoneInput) {
+    console.log("Initialisation du champ téléphone");
+    // Initialiser le plugin
+    const iti = window.intlTelInput(phoneInput, {
+      initialCountry: "fr", // Pays par défaut : France
+      preferredCountries: ["fr", "be", "ch", "de", "es", "it"], // Pays en haut de liste
+      separateDialCode: true, // Afficher le code pays séparé
+      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+    });
+    
+    // Stocker l'instance dans window pour y accéder globalement
+    window.phoneInputInstance = iti;
+    
+    // Fonction de validation
+    window.validatePhone = function(iti) {
+      const errorMsg = document.getElementById('phoneError');
+      if (phoneInput.value.trim() === '' || phoneInput.value.toLowerCase() === 'néant') {
+        // C'est ok si le champ est vide ou contient "néant"
+        errorMsg.classList.add('hidden');
+        return true;
+      }
+      
+      if (iti.isValidNumber()) {
+        errorMsg.classList.add('hidden');
+        return true;
+      } else {
+        errorMsg.textContent = "Veuillez entrer un numéro de téléphone valide";
+        errorMsg.classList.remove('hidden');
+        return false;
+      }
+    };
+    
+    // Ajouter un écouteur d'événement pour valider à la perte de focus
+    phoneInput.addEventListener('blur', function() {
+      if (window.phoneInputInstance) {
+        window.validatePhone(window.phoneInputInstance);
+      }
+    });
+    
+    // Ajouter un écouteur pour masquer l'erreur quand l'utilisateur commence à taper
+    phoneInput.addEventListener('input', function() {
+      const errorMsg = document.getElementById('phoneError');
+      if (errorMsg) errorMsg.classList.add('hidden');
+    });
+  }
+
+  // Vérifier la connexion Firebase
+  try {
+    checkFirebaseConnection();
+    testFirebaseStorage();
+  } catch (error) {
+    console.warn("Erreur lors de la vérification de la connexion:", error);
+  }
+});
+</script>
+</body>
+</html>
+
+/// ajout du fichier html initial///
